@@ -1,0 +1,118 @@
+[
+ {
+  "date": "2026-10-05",
+  "v": {
+   "held": 63084,
+   "deaths": 76,
+   "agreements": 2617,
+   "facilities": 208,
+   "allegations": 1126,
+   "refusals": 48,
+   "inspections": 169
+  }
+ },
+ {
+  "date": "2026-10-06",
+  "v": {
+   "held": 63084,
+   "deaths": 76,
+   "agreements": 2631,
+   "contract_musd": 16136,
+   "facilities": 208,
+   "allegations": 1126,
+   "refusals": 48,
+   "inspections": 169
+  }
+ },
+ {
+  "date": "2026-10-08",
+  "v": {
+   "held": 63084,
+   "deaths": 76,
+   "agreements": 2650,
+   "contract_musd": 16136,
+   "facilities": 208,
+   "allegations": 1126,
+   "refusals": 48,
+   "inspections": 176
+  }
+ },
+ {
+  "date": "2026-10-09",
+  "v": {
+   "held": 63084,
+   "deaths": 76,
+   "agreements": 2654,
+   "contract_musd": 16136,
+   "facilities": 208,
+   "allegations": 1126,
+   "refusals": 48,
+   "inspections": 176
+  }
+ },
+ {
+  "date": "2026-10-12",
+  "v": {
+   "held": 63084,
+   "deaths": 76,
+   "agreements": 2654,
+   "contract_musd": 16135,
+   "facilities": 208,
+   "allegations": 1126,
+   "refusals": 48,
+   "inspections": 176
+  }
+ },
+ {
+  "date": "2026-10-22",
+  "v": {
+   "held": 63084,
+   "deaths": 76,
+   "agreements": 2697,
+   "contract_musd": 16135,
+   "facilities": 208,
+   "allegations": 1126,
+   "refusals": 48,
+   "inspections": 176
+  }
+ },
+ {
+  "date": "2026-10-26",
+  "v": {
+   "held": 63084,
+   "deaths": 76,
+   "agreements": 2697,
+   "contract_musd": 16136,
+   "facilities": 208,
+   "allegations": 1126,
+   "refusals": 48,
+   "inspections": 177
+  }
+ },
+ {
+  "date": "2026-11-05",
+  "v": {
+   "held": 63084,
+   "deaths": 76,
+   "agreements": 2725,
+   "contract_musd": 16136,
+   "facilities": 208,
+   "allegations": 1126,
+   "refusals": 48,
+   "inspections": 182
+  }
+ },
+ {
+  "date": "2026-11-06",
+  "v": {
+   "held": 63084,
+   "deaths": 76,
+   "agreements": 2725,
+   "contract_musd": 16092,
+   "facilities": 208,
+   "allegations": 1126,
+   "refusals": 48,
+   "inspections": 184
+  }
+ }
+]

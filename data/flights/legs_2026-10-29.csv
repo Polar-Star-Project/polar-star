@@ -1,0 +1,7 @@
+date,registration,hex,aircraft_type,callsign,departed_utc,arrived_utc,origin,origin_country,origin_certain,dest,dest_country,dest_certain,kind,basis
+2026-10-29,N837VA,ab7437,A320,VELUX43,03:06,05:51,MIA,US,True,HRL,US,True,domestic,"contractor aircraft; day includes HRL (Harlingen, TX)"
+2026-10-29,N837VA,ab7437,A320,VELUX41,13:15,14:40,HRL,US,True,VSA,MX,False,international,"contractor aircraft; day includes HRL (Harlingen, TX)"
+2026-10-29,N837VA,ab7437,A320,VELUX41,21:01,22:22,MTT,MX,False,HRL,US,True,international,"contractor aircraft; day includes HRL (Harlingen, TX)"
+2026-10-29,N779BC,aa8a92,SW4,LYM404,02:07,04:53,DEN,US,True,AEX,US,True,domestic,"contractor aircraft; day includes AEX (Alexandria, LA)"
+2026-10-29,N779BC,aa8a92,SW4,LYM404,06:05,08:58,AEX,US,False,DEN,US,True,domestic,"contractor aircraft; day includes AEX (Alexandria, LA)"
+2026-10-29,N779BC,aa8a92,SW4,LYM414,12:47,13:30,DEN,US,True,LBF,US,True,domestic,"contractor aircraft; day includes AEX (Alexandria, LA)"

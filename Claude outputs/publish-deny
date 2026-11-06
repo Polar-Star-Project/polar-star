@@ -1,0 +1,7 @@
+# Extended regexes, one per line, matched against every path ever committed.
+# Any match blocks publishing. Keep at least one line or publishing fails closed.
+^data/reference/fec_donors\.csv$
+^restricted/
+(^|/)\.env$
+\.pem$
+\.kdbx$

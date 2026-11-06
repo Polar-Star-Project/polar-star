@@ -1,0 +1,7 @@
+# Exact emails allowed as author or committer anywhere in history. Anything else blocks publishing.
+# Your project alias (the email set by includeIf on tesseract):
+polar-star@<your-simplelogin-domain>
+# Actions bot (refresh commits via GITHUB_TOKEN):
+41898282+github-actions[bot]@users.noreply.github.com
+# GitHub web UI committer (only if you ever edit in the browser):
+noreply@github.com
