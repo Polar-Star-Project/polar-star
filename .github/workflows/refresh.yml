@@ -24,7 +24,7 @@ concurrency:
 jobs:
   refresh:
     # Runs only in the private working repository. The copy mirrored into the public repository does nothing.
-    if: github.repository == 'Polar-Star-Project/polar-star-dev'
+    if: github.repository == 'Polar-Star-Project/polar-star-development'
     runs-on: ubuntu-latest
     timeout-minutes: 340
     steps:
