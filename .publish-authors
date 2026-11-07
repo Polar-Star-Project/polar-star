@@ -1,0 +1,7 @@
+# Exact emails allowed as author or committer anywhere in history. Anything else blocks publishing.
+# Commits from tesseract (repo-local git config):
+maintainer@polarstar.invalid
+# Weekly refresh commits (refresh.yml, via GITHUB_TOKEN):
+41898282+github-actions[bot]@users.noreply.github.com
+# GitHub web UI committer (only if you ever edit in the browser):
+noreply@github.com

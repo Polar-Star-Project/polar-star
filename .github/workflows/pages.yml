@@ -1,0 +1,40 @@
+# Publishes the page. Runs only in the PUBLIC repository, on each push the publisher app makes to main.
+name: pages
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+concurrency:
+  group: pages
+  cancel-in-progress: false
+jobs:
+  deploy:
+    if: github.repository == 'Polar-Star-Project/polar-star'
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262   # v4.4.0
+      - id: pages
+        uses: actions/configure-pages@983d7736d9b0ae728b81ab479565c72886d7745b   # v5.0.0
+      - run: |
+          # The built page is a fragment (it is also published as an artifact that adds its own wrapper), so give it a document head here.
+          mkdir -p _site && cp -r site/layers _site/ 2>/dev/null || true
+          cp site/flights-data.js _site/
+          cp site/more-data.js _site/
+          cp site/persons-data.js _site/
+          cp site/watch.xml _site/
+          printf 'User-agent: *\nAllow: /\nSitemap: https://polarstarproject.org/sitemap.xml\n' > _site/robots.txt
+          printf '<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"><url><loc>https://polarstarproject.org/</loc></url></urlset>\n' > _site/sitemap.xml
+          mkdir -p _site/vendor && cp site/vendor/d3.min.js site/vendor/topojson.min.js _site/vendor/ && cp -r site/vendor/fonts _site/vendor/
+          { printf '<!doctype html>\n<html lang="en">\n<meta name="viewport" content="width=device-width, initial-scale=1">\n'; cat site/index.html; } > _site/index.html
+      - uses: actions/upload-pages-artifact@56afc609e74202658d3ffba0e8f6dda462b719fa   # v3.0.1
+        with:
+          path: _site
+      - id: deploy
+        uses: actions/deploy-pages@d6db90164ac5ed86f2b6aed7e0febac5b3c0c03e   # v4.0.5
