@@ -9,12 +9,18 @@ may fail (a site is down, a server is blocked): its data stays as it was, the fa
 data/refresh_status.json, and the page footer flags that source once it is older than it should be.
 The page is rebuilt only after every test passes, and the previous page is put back if the build fails.
 """
-import datetime as dt, json, os, shutil, signal, subprocess, sys, threading
+import datetime as dt, json, os, shutil, signal, subprocess, sys, threading, time
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 RAW = "data/raw/"
 STEPS = [  # name, command after "python", required
+    # short checks that depend on no other step run first, so a long run that is cut off still keeps the court
+    # statuses, help lines and organizations current
+    ("disputes",   ["pipeline/disputes_check.py"], False),
+    ("dockets",    ["pipeline/dockets.py"], False),
+    ("hotlines",   ["pipeline/hotlines_check.py"], False),
+    ("familyorgs", ["pipeline/family_orgs_check.py"], False),
     ("records",    ["pipeline/fetch.py"], True),
     ("custody",    ["pipeline/custody_trend.py"], False),
     ("removed_to", ["pipeline/removals_country.py"], False),
@@ -47,11 +53,7 @@ STEPS = [  # name, command after "python", required
     ("firmbase",   ["pipeline/firm_base.py"], False),
     ("sec",        ["pipeline/sec_watch.py"], False),
     ("social",     ["pipeline/social_check.py"], False),
-    ("familyorgs", ["pipeline/family_orgs_check.py"], False),
     ("officials",  ["pipeline/officials_check.py"], False),
-    ("hotlines",   ["pipeline/hotlines_check.py"], False),
-    ("disputes",   ["pipeline/disputes_check.py"], False),
-    ("dockets",    ["pipeline/dockets.py"], False),
     ("legalaid",   ["pipeline/eoir_probono.py"], False),
     ("moa",        ["pipeline/moa_links.py"], False),
     ("signers",    ["pipeline/moa_signers.py"], False),
@@ -88,7 +90,14 @@ def main(argv):
     arg = lambda flag: argv[argv.index(flag) + 1].split(",") if flag in argv else None
     todo = pick([n for n, _, _ in STEPS], arg("--only"), arg("--skip"))
     page, keep = ROOT / "site" / "index.html", ROOT / "site" / "index.previous.html"
-    status, ok = {"started": dt.datetime.now(dt.timezone.utc).isoformat(timespec="seconds"), "steps": {}}, True
+    status, ok = {"started": dt.datetime.now(dt.timezone.utc).isoformat(timespec="seconds"), "steps": {}, "minutes": {}}, True
+    sp = ROOT / "data" / "refresh_status.json"
+    if arg("--only") and sp.exists():           # a partial run (say, the rebuild after a cut-off refresh) adds to the last status, so what the full run did stays visible
+        prev = json.loads(sp.read_text(encoding="utf-8"))
+        status["steps"] = {k: v for k, v in (prev.get("steps") or {}).items() if k not in todo}
+        status["errors"] = {k: v for k, v in (prev.get("errors") or {}).items() if k not in todo}
+        status["minutes"] = {k: v for k, v in (prev.get("minutes") or {}).items() if k not in todo}
+        status["earlier_run_started"] = prev.get("started", "")
     for name, cmd, required in STEPS:
         if name not in todo: continue
         if name in ON_REQUEST and not arg("--only"): continue
@@ -97,13 +106,13 @@ def main(argv):
         print(f"=== {name} ===", flush=True)
         proc = subprocess.Popen([sys.executable, "-u"] + cmd, cwd=ROOT, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True, errors="replace",
                                 start_new_session=True)        # its own process group, so stopping it also stops any browser it started
-        limit, stopped = LIMITS.get(name, LIMIT), []
+        limit, stopped, t0 = LIMITS.get(name, LIMIT), [], time.monotonic()
         timer = threading.Timer(limit * 60, lambda: (stopped.append(1), os.killpg(proc.pid, signal.SIGKILL)))
         timer.daemon = True; timer.start()
         tail = []
         for line in proc.stdout:                                     # shown live, and the last lines are kept so a failure explains itself in refresh_status.json
             print(line, end="", flush=True); tail = (tail + [line.rstrip()])[-6:]
-        code = proc.wait(); timer.cancel()
+        code = proc.wait(); timer.cancel(); status["minutes"][name] = round((time.monotonic() - t0) / 60, 1)
         if stopped: code = code or 1; tail.append(f"stopped after {limit} minutes")
         status["steps"][name] = "ok" if code == 0 else ("timed out" if stopped else "failed")
         if code != 0: status.setdefault("errors", {})[name] = " / ".join(t for t in tail if t)[-500:]

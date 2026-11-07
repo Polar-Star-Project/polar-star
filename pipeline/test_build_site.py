@@ -209,6 +209,21 @@ def test_refresh_steps_keep_order_and_reject_unknown_names():
     assert "flights" not in r.pick(names, None, ["flights"])
     try: r.pick(names, ["test"], None); assert False
     except SystemExit: pass
+    assert names[:4] == ["disputes", "dockets", "hotlines", "familyorgs"]           # short independent checks survive a cut-off run
+
+
+def test_a_partial_run_adds_to_the_last_status(tmp_path):
+    import json, refresh_all as r
+    (tmp_path / "data").mkdir(); (tmp_path / "site").mkdir()
+    (tmp_path / "data" / "refresh_status.json").write_text(json.dumps({"started": "2026-11-07T00:00:00+00:00",
+        "steps": {"dockets": "ok", "flights": "timed out", "tests": "failed"}, "errors": {"tests": "x", "flights": "y"}, "minutes": {"flights": 60}}))
+    old_root, old_steps = r.ROOT, r.STEPS
+    r.ROOT, r.STEPS = tmp_path, [("tests", ["-c", "pass"], True), ("build", ["-c", "pass"], True)]
+    try: assert r.main(["--only", "tests,build"]) == 0
+    finally: r.ROOT, r.STEPS = old_root, old_steps
+    st = json.loads((tmp_path / "data" / "refresh_status.json").read_text())
+    assert st["steps"] == {"dockets": "ok", "flights": "timed out", "tests": "ok", "build": "ok"}
+    assert st["errors"] == {"flights": "y"} and st["minutes"]["flights"] == 60 and "tests" in st["minutes"] and st["earlier_run_started"].startswith("2026-11-07")
 
 
 def test_conduct_rates_use_only_stated_audits_whose_stated_period_is_inside_the_day_counts():

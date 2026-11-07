@@ -46,6 +46,7 @@ jobs:
           FEC_API_KEY: ${{ secrets.FEC_API_KEY }}      # optional: without it the political committee figures are left as they are
           LDA_API_KEY: ${{ secrets.LDA_API_KEY }}
           COURTLISTENER_TOKEN: ${{ secrets.COURTLISTENER_TOKEN }}   # optional: the project's CourtListener account; court dockets for the disputes tab
+          IDENTITY_DENYLIST: ${{ secrets.IDENTITY_DENYLIST }}      # the tests check no file names a person; without it the tests fail and the page is not rebuilt
           ONLY: ${{ github.event.inputs.only }}
           SKIP: ${{ github.event.inputs.skip }}
         run: |
@@ -55,6 +56,8 @@ jobs:
           xvfb-run -a python pipeline/refresh_all.py $args
       - name: Rebuild the page if the refresh was cut off
         if: steps.refresh.outcome != 'success'
+        env:
+          IDENTITY_DENYLIST: ${{ secrets.IDENTITY_DENYLIST }}
         run: xvfb-run -a python pipeline/refresh_all.py --only tests,build
       - name: Weekly to-do report
         if: always()
