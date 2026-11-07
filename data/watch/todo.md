@@ -1,6 +1,10 @@
-# Weekly to-do, 2026-11-06
+# Weekly to-do, 2026-11-07
 
-39 items. Nothing here changes the page by itself.
+40 items. Nothing here changes the page by itself.
+
+## Refresh steps that failed (1)
+
+- `tests`: failed — ECKED LINE dril EXPIRED (checked 2026-10-27); hidden until it is checked again / FAMILY HELP LINES HIDDEN (not confirmed this week): dril / FAMILY HELP LINES HIDDEN (not confirmed this week): orr / ORGANIZATIONS WITHOUT A DESCRIPTION in social_orgs_desc.csv: Org A; Org B / 265 tests passed, 1 failed
 
 ## Disputes whose docket has filings the weekly step could not read yet (no docket text on CourtListener; they are retried each week) (11)
 

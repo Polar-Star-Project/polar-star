@@ -1,9 +1,11 @@
 {
- "started": "2026-11-06T13:02:04+00:00",
+ "started": "2026-11-07T08:51:37+00:00",
  "steps": {
-  "tests": "ok",
-  "build": "ok"
+  "tests": "failed"
  },
- "finished": "2026-11-06T13:03:29+00:00",
- "page_rebuilt": true
+ "errors": {
+  "tests": "AssertionError: identity denylist missing: set IDENTITY_DENYLIST or create restricted/identity_denylist.txt / HAND-CHECKED LINE dril EXPIRED (checked 2026-10-27); hidden until it is checked again / FAMILY HELP LINES HIDDEN (not confirmed this week): dril / FAMILY HELP LINES HIDDEN (not confirmed this week): orr / ORGANIZATIONS WITHOUT A DESCRIPTION in social_orgs_desc.csv: Org A; Org B / 265 tests passed, 1 failed"
+ },
+ "finished": "2026-11-07T08:52:38+00:00",
+ "page_rebuilt": false
 }
