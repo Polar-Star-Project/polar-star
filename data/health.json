@@ -1,17 +1,16 @@
 {
- "built": "2026-11-06",
+ "built": "2026-11-08",
  "stale": [
-  "Contract type, guaranteed beds and inspection rating per facility (2026-07-20, 109 days; nothing newer posted, checked 2026-11-06)",
-  "Population, solitary confinement and contract terms per facility (ICE detention statistics workbooks) (2026-07-20, 109 days; nothing newer posted, checked 2026-11-06)",
-  "Removals, returns and expulsions by fiscal year (yearbook table 39) (2023-09-30, 1133 days; nothing newer posted, checked 2026-11-06)",
-  "Alternatives to detention, book-ins, removals, length of stay, bond, segregation reasons, parents of US citizens and TPS countries (ICE detention statistics) (2026-07-20, 109 days; nothing newer posted, checked 2026-11-06)",
-  "Removals from detention by destination country (ICE detention records) (2026-07-31, 98 days)",
-  "PACs focused on US policy toward one country, and their contributions and spending (2026-10-11, 26 days)",
-  "Registered foreign agents and the foreign principals they work for (2026-10-12, 25 days)"
+  "Contract type, guaranteed beds and inspection rating per facility (2026-07-20, 111 days; nothing newer posted, checked 2026-11-07)",
+  "Population, solitary confinement and contract terms per facility (ICE detention statistics workbooks) (2026-07-20, 111 days; nothing newer posted, checked 2026-11-07)",
+  "Removals, returns and expulsions by fiscal year (yearbook table 39) (2023-09-30, 1135 days; nothing newer posted, checked 2026-11-07)",
+  "Alternatives to detention, book-ins, removals, length of stay, bond, segregation reasons, parents of US citizens and TPS countries (ICE detention statistics) (2026-07-20, 111 days; nothing newer posted, checked 2026-11-07)",
+  "Removals from detention by destination country (ICE detention records) (2026-07-31, 100 days)",
+  "Registered foreign agents and the foreign principals they work for (2026-10-12, 27 days)"
  ],
  "layers": {
   "facilities": 561,
-  "agreements_287g": 1190,
+  "agreements_287g": 1203,
   "airports": 196,
   "flight_routes": 2022,
   "flight_tracks_recent": 149

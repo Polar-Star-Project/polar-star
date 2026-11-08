@@ -2,7 +2,7 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
 <title>Polar Star Project: alerts from the records</title>
 <id>tag:polar-star,2026:watch</id>
-<updated>2026-11-06T00:00:00Z</updated>
+<updated>2026-11-08T00:00:00Z</updated>
 <link rel="alternate" href="./"/>
 <author><name>Polar Star Project</name></author>
 <entry>
@@ -10,7 +10,7 @@
 <id>tag:polar-star,2026:watch/ice-detention-stats/2026-10-09</id>
 <updated>2026-10-09T00:00:00Z</updated>
 <link href="./"/>
-<summary>ICE's last detention statistics file is dated July 20, 2026: 109 days with no new file when ICE's page was checked on November 6, 2026. Congress asked for this file every two weeks, so about 7 updates have been missed. The requirement was added in the fiscal 2020 DHS appropriations law; reporting has noted debate over whether it still binds ICE.</summary>
+<summary>ICE's last detention statistics file is dated July 20, 2026: 110 days with no new file when ICE's page was checked on November 7, 2026. Congress asked for this file every two weeks, so about 7 updates have been missed. The requirement was added in the fiscal 2020 DHS appropriations law; reporting has noted debate over whether it still binds ICE.</summary>
 </entry>
 <entry>
 <title>Share of people in ICE detention held more than a year</title>
@@ -125,6 +125,13 @@
 <summary>54 of the 281 people held here on August 6, 2026 had been in ICE detention more than a year (19%), against 6.3% of everyone held. At the national share, a count this high would come up by chance less than once in 100. Long stays often come from cases still in court or on appeal; the records do not say which.</summary>
 </entry>
 <entry>
+<title>Lawsuit, Rochester, NY (2025-04-24)</title>
+<id>tag:polar-star,2026:dispute/2043c8f3e1/2026-10-29</id>
+<updated>2026-10-29T00:00:00Z</updated>
+<link href="./#disp"/>
+<summary>The Justice Department sued Rochester over its policy limiting city help with federal immigration enforcement (United States v. City of Rochester, W.D.N.Y.). Latest on record (2026-10-29): From the court's docket: NOTICE OF APPEAL as to 91 Decision and Order, 92 Judgment, by The United States of America. (Schulte, Alexandra) Modified on 10/30/2026 (JHF). (Entered: 10/29/2026) Source: https://cityofrochester.gov/news/statement-mayor-city-council-president-city-rochester-regarding-legal-filing-us-department</summary>
+</entry>
+<entry>
 <title>Lawsuit, Illinois, IL (2025-12-22)</title>
 <id>tag:polar-star,2026:dispute/31ba3045d5/2026-10-16</id>
 <updated>2026-10-16T00:00:00Z</updated>
@@ -188,6 +195,13 @@
 <summary>The Justice Department sued Maine over a state policy that denies confidential license plates to federal agencies, including ICE; it filed similar suits against three other states the same day. Latest on record (2026-09-22): Maine moved to dismiss; the motion was fully briefed on September 22, 2026, and no ruling is on record. Source: https://www.justice.gov/opa/pr/justice-department-sues-states-denying-undercover-license-plates-federal-law-enforcement</summary>
 </entry>
 <entry>
+<title>Lawsuit, Minnesota, Minneapolis, Saint Paul and Hennepin County, MN (2025-09-29)</title>
+<id>tag:polar-star,2026:dispute/117cfd7ddf/2026-09-18</id>
+<updated>2026-09-18T00:00:00Z</updated>
+<link href="./#disp"/>
+<summary>The Justice Department sued Minnesota, Minneapolis, Saint Paul and Hennepin County over their policies on immigration detainers and data sharing (United States v. Minnesota, D. Minn.). Latest on record (2026-09-18): From the court's docket: NOTICE OF APPEAL TO 8TH CIRCUIT as to 76 Order on Motion to Dismiss/General,,,,,,,,,,, 77 Judgment by United States of America. (Miller, Luke) (Entered: 09/18/2026) Source: https://www.justice.gov/opa/pr/justice-department-sues-minnesota-over-sanctuary-policies</summary>
+</entry>
+<entry>
 <title>Criminal charge, North Minneapolis, MN (2026-05-18)</title>
 <id>tag:polar-star,2026:dispute/d08257e6fe/2026-09-17</id>
 <updated>2026-09-17T00:00:00Z</updated>
@@ -214,13 +228,6 @@
 <updated>2026-09-04T00:00:00Z</updated>
 <link href="./#disp"/>
 <summary>The Justice Department sued New Jersey over Executive Order No. 12, which bars civil immigration arrests in nonpublic areas of state property (United States v. New Jersey, D.N.J.). Latest on record (2026-09-04): The court dismissed the case; the executive order remains in effect. Source: https://www.justice.gov/opa/pr/justice-department-files-lawsuit-against-new-jersey-interfering-federal-immigration-laws</summary>
-</entry>
-<entry>
-<title>Lawsuit, Rochester, NY (2025-04-24)</title>
-<id>tag:polar-star,2026:dispute/2043c8f3e1/2026-09-02</id>
-<updated>2026-09-02T00:00:00Z</updated>
-<link href="./#disp"/>
-<summary>The Justice Department sued Rochester over its policy limiting city help with federal immigration enforcement (United States v. City of Rochester, W.D.N.Y.). Latest on record (2026-09-02): The court dismissed the amended complaint with prejudice and entered judgment for the city. Source: https://cityofrochester.gov/news/statement-mayor-city-council-president-city-rochester-regarding-legal-filing-us-department</summary>
 </entry>
 <entry>
 <title>Lawsuit, Washtenaw County, MI (2026-04-09)</title>
@@ -263,13 +270,6 @@
 <updated>2026-07-23T00:00:00Z</updated>
 <link href="./#disp"/>
 <summary>The Justice Department sued Boston over its Trust Act and related policies that limit city help with federal immigration enforcement (United States v. City of Boston, D. Mass.). Latest on record (2026-07-23): The court dismissed the case for lack of standing on May 28, 2026; the United States appealed to the First Circuit. Source: https://www.justice.gov/opa/pr/department-justice-sues-city-boston-mayor-michelle-wu-over-sanctuary-city-laws</summary>
-</entry>
-<entry>
-<title>Lawsuit, Minnesota, Minneapolis, Saint Paul and Hennepin County, MN (2025-09-29)</title>
-<id>tag:polar-star,2026:dispute/117cfd7ddf/2026-07-20</id>
-<updated>2026-07-20T00:00:00Z</updated>
-<link href="./#disp"/>
-<summary>The Justice Department sued Minnesota, Minneapolis, Saint Paul and Hennepin County over their policies on immigration detainers and data sharing (United States v. Minnesota, D. Minn.). Latest on record (2026-07-20): The court dismissed the case. Source: https://www.justice.gov/opa/pr/justice-department-sues-minnesota-over-sanctuary-policies</summary>
 </entry>
 <entry>
 <title>Lawsuit, Maryland, MD (2026-07-09)</title>
