@@ -56,6 +56,7 @@ def main():
     where it got to and the next weekly run carries on. The files are replaced only when a full read is finished."""
     import fec_pace as fp
     key = os.environ.get("FEC_API_KEY", "").strip()
+    if fp.rested("member_top_donors", REF / "member_top_donors_meta.json"): print("Read completed less than a month ago: resting this week (fec_pace.REST_DAYS).", file=sys.stderr); return
     if not key: print("FEC_API_KEY is not set: top donors were left as they were."); return
     rd, name = fp.Reader(key), "member_top_donors"
     cyc = cycle(dt.date.today())

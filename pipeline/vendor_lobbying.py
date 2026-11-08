@@ -13,6 +13,10 @@ and quarter. A filing counts for a company only when the client name on the fili
   imm_filings  reports that list "Immigration" among the issue areas
   example      the newest report that lists ICE, or else the newest that lists Immigration (a link to the filing itself)
 Writes data/reference/vendor_lobbying.csv and vendor_lobbying_meta.json. Nothing is written unless most requests succeed.
+
+Reads in pieces (fec_pace.py): MINUTES of reading per run, then the position is saved in data/progress/vendor_lobbying.json
+and the next weekly run carries on; the files are replaced only when every company has been read. After a complete read the
+list rests for fec_pace.REST_DAYS (quarterly reports).
 """
 import csv, datetime as dt, json, os, re, sys, time, urllib.error, urllib.parse, urllib.request
 from pathlib import Path
@@ -21,6 +25,7 @@ from identity import USER_AGENT
 REF = Path(__file__).resolve().parent.parent / "data" / "reference"
 API = "https://lda.gov/api/v1/filings/?"
 FIRST_YEAR, MIN_USD = 2023, 10_000_000
+MINUTES = float(os.environ.get("VENDORLOBBY_MINUTES", "30"))
 SUFFIX = {"INC", "INCORPORATED", "LLC", "L", "C", "LLP", "LP", "CORP", "CORPORATION", "CO", "COMPANY", "THE", "FEDERAL", "USA", "US", "LTD", "PLC", "GROUP"}
 
 
@@ -63,48 +68,63 @@ def tally(filings, key):
     return {"usd": usd, "filings": n, "ice_filings": ice, "imm_filings": imm, "example": (ex or {}).get("filing_document_url", "")}
 
 
-def main():
+def main(fetch=None, minutes=MINUTES, clock=time.monotonic):
+    import fec_pace as fp
+    name = "vendor_lobbying"
+    if fp.rested(name, REF / "vendor_lobbying_meta.json"): print("Contractor lobbying read less than a month ago: resting this week.", file=sys.stderr); return
     key, pause = lda_auth()
-    def fetch(url):
+    print("lda.gov: " + ("with LDA_API_KEY (120 requests a minute)" if key else "no LDA_API_KEY (15 requests a minute)"), file=sys.stderr)
+    def lda(url):
         for i in range(5):
             try:
                 with urllib.request.urlopen(urllib.request.Request(url, headers={"Accept": "application/json", "User-Agent": USER_AGENT, **key}), timeout=90) as r:
                     time.sleep(pause[0]); return json.loads(r.read().decode("utf-8"))
             except urllib.error.HTTPError as e:
-                if e.code in (401, 403) and key: print("LDA_API_KEY was refused; going on without it (15 requests a minute)", flush=True); key.clear(); pause[0] = 4.2; continue
+                if e.code in (401, 403) and key: print("LDA_API_KEY was refused; going on without it (15 requests a minute)", file=sys.stderr); key.clear(); pause[0] = 4.2; continue
                 time.sleep(30 if e.code == 429 else 8)
             except Exception as e:
                 time.sleep(8)
         return None
-    rd = lambda n: list(csv.DictReader(open(REF / n, encoding="utf-8"), delimiter="|")) if (REF / n).exists() else []
-    tot = {}
-    for a in rd("ice_awards.csv"):
-        try: tot[a["recipient"]] = tot.get(a["recipient"], 0) + float(a["window_usd"] or 0)
-        except ValueError: pass
-    parent = {r["recipient"]: r["parent"] for r in rd("ice_recipient_parents.csv")}
-    skip = {r["recipient"] for r in rd("ice_contract_recipients.csv") if float(r.get("detention_guard_musd") or 0) * 1e6 > tot.get(r["recipient"], 0) / 2}
-    todo = [r for r, v in sorted(tot.items(), key=lambda kv: -kv[1]) if v >= MIN_USD and r not in skip]
-    rows, failed, asked = [], 0, 0
-    for rec in todo:
-        par = parent.get(rec, "").split(";")[0].strip()
+    fetch = fetch or lda
+    st = fp.load(name, FIRST_YEAR)
+    if "todo" not in st:                                        # the company list is fixed when a read starts
+        rd = lambda n: list(csv.DictReader(open(REF / n, encoding="utf-8"), delimiter="|")) if (REF / n).exists() else []
+        tot = {}
+        for a in rd("ice_awards.csv"):
+            try: tot[a["recipient"]] = tot.get(a["recipient"], 0) + float(a["window_usd"] or 0)
+            except ValueError: pass
+        parent = {r["recipient"]: r["parent"] for r in rd("ice_recipient_parents.csv")}
+        skip = {r["recipient"] for r in rd("ice_contract_recipients.csv") if float(r.get("detention_guard_musd") or 0) * 1e6 > tot.get(r["recipient"], 0) / 2}
+        todo = [r for r, v in sorted(tot.items(), key=lambda kv: -kv[1]) if v >= MIN_USD and r not in skip]
+        st.update(todo=[[r, parent.get(r, "").split(";")[0].strip()] for r in todo], skip=sorted(skip), next=0, rows=[], failed=0, asked=0)
+    todo, skip, rows, dl = st["todo"], set(st["skip"]), st["rows"], fp.Deadline(minutes, clock)
+    while st["next"] < len(todo):
+        if dl.up():
+            fp.save(name, st)
+            print(f"paused (time is up for this run): {st['next']} of {len(todo)} companies; the next run carries on (read started {st['started']}, run {st['runs']}). The page keeps the last complete read.", file=sys.stderr)
+            return
+        rec, par = todo[st["next"]]
         keys = [k for k in dict.fromkeys([core(rec), "" if par in skip else core(par)]) if k]      # a detention operator's own lobbying is on the Companies tab
         best = None
-        for key in keys:
+        for k in keys:
             fl = []
             for y in range(FIRST_YEAR, dt.date.today().year + 1):
-                url = API + urllib.parse.urlencode({"client_name": key, "filing_year": y, "page_size": 25})
+                url = API + urllib.parse.urlencode({"client_name": k, "filing_year": y, "page_size": 25})
                 while url:
-                    asked += 1; j = fetch(url)
-                    if j is None: failed += 1; break
+                    st["asked"] += 1; j = fetch(url)
+                    if j is None: st["failed"] += 1; break
                     fl += j.get("results") or []; url = j.get("next")
-            t = tally(fl, key)
-            if t["filings"] and (not best or t["usd"] > best["usd"]): best = dict(t, matched=key)
+            t = tally(fl, k)
+            if t["filings"] and (not best or t["usd"] > best["usd"]): best = dict(t, matched=k)
         if best: rows.append(dict(best, recipient=rec)); print(f"  {rec}: {best['filings']} reports, ICE {best['ice_filings']}, IMM {best['imm_filings']}", file=sys.stderr)
-    if asked and failed > asked / 4: raise SystemExit(f"{failed} of {asked} lda.gov requests failed: left the list as it was.")
+        st["next"] += 1
+    if st["asked"] and st["failed"] > st["asked"] / 4: fp.clear(name); raise SystemExit(f"{st['failed']} of {st['asked']} lda.gov requests failed: left the list as it was; the next run starts over.")
     with open(REF / "vendor_lobbying.csv", "w", newline="", encoding="utf-8") as f:
         w = csv.DictWriter(f, fieldnames=["recipient", "matched", "usd", "filings", "ice_filings", "imm_filings", "example"], delimiter="|", lineterminator="\n", extrasaction="ignore")
         w.writeheader(); w.writerows(rows)
-    (REF / "vendor_lobbying_meta.json").write_text(json.dumps({"read": str(dt.date.today()), "from": FIRST_YEAR, "companies_checked": len(todo), "with_lobbying": len(rows)}, indent=1), encoding="utf-8")
+    (REF / "vendor_lobbying_meta.json").write_text(json.dumps({"read": str(dt.date.today()), "read_started": st["started"], "runs": st.get("runs", 0) + 1, "from": FIRST_YEAR,
+                                                               "companies_checked": len(todo), "with_lobbying": len(rows)}, indent=1), encoding="utf-8")
+    fp.clear(name)
     print(f"{len(rows)} of {len(todo)} contractors lobbied", file=sys.stderr)
 
 

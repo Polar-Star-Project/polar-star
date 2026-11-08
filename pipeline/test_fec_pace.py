@@ -53,7 +53,7 @@ def test_member_top_donors_read_in_pieces_equals_one_read(tmp_path):
     (ref / "members.csv").write_text("bioguide|current\n" + "".join(f"{b}|1\n" for b in bgs))
     (ref / "member_committees.csv").write_text("bioguide|committee_id|designation\n" + "".join(f"{b}|C{b}|P\n" for b in bgs))
     legs = json.dumps([{"id": {"bioguide": b, "fec": ["H" + b]}} for b in bgs]).encode()
-    old = (m.REF, fp.PROGRESS, fp.Reader, m.urllib.request.urlopen)
+    old = (m.REF, fp.PROGRESS, fp.Reader, m.urllib.request.urlopen); rest = fp.REST_DAYS
     def run(limit):
         class R:
             calls = 0
@@ -63,7 +63,7 @@ def test_member_top_donors_read_in_pieces_equals_one_read(tmp_path):
                 R.calls += 1; return _fake_fec()(path, **q)
         fp.Reader = R; m.main(); return R.calls
     try:
-        m.REF, fp.PROGRESS = ref, tmp_path / "progress"
+        m.REF, fp.PROGRESS = ref, tmp_path / "progress"; fp.REST_DAYS = 0
         m.urllib.request.urlopen = lambda *a, **k: Resp(legs)
         import os; os.environ["FEC_API_KEY"] = "k"
         run(None); one = (ref / "member_top_donors.csv").read_text()
@@ -76,7 +76,7 @@ def test_member_top_donors_read_in_pieces_equals_one_read(tmp_path):
         assert runs > 1 and (ref / "member_top_donors.csv").read_text() == one          # same totals: no page counted twice
         assert not (tmp_path / "progress" / "member_top_donors.json").exists()
     finally:
-        m.REF, fp.PROGRESS, fp.Reader, m.urllib.request.urlopen = old
+        m.REF, fp.PROGRESS, fp.Reader, m.urllib.request.urlopen = old; fp.REST_DAYS = rest
 
 
 def test_country_pacs_read_in_pieces_equals_one_read(tmp_path):
@@ -95,7 +95,7 @@ def test_country_pacs_read_in_pieces_equals_one_read(tmp_path):
             n = int(q.get("last_index") or 0) + 1
             return {"results": [{"recipient_committee_id": q["recipient_committee_id"][n], "disbursement_amount": 1000.0}], "pagination": {"last_indexes": {"last_index": n} if n < 3 else None}}
         return {"results": [], "pagination": {}}
-    old = (c.REF, fp.PROGRESS, fp.Reader, c.urllib.request.urlopen)
+    old = (c.REF, fp.PROGRESS, fp.Reader, c.urllib.request.urlopen); rest = fp.REST_DAYS
     def run(limit):
         class R:
             calls = 0
@@ -105,7 +105,7 @@ def test_country_pacs_read_in_pieces_equals_one_read(tmp_path):
                 R.calls += 1; return fec(path, **q)
         fp.Reader = R; c.main()
     try:
-        c.REF, fp.PROGRESS = ref, tmp_path / "progress"
+        c.REF, fp.PROGRESS = ref, tmp_path / "progress"; fp.REST_DAYS = 0
         c.urllib.request.urlopen = lambda *a, **k: Resp(legs)
         import os; os.environ["FEC_API_KEY"] = "k"
         run(None); one = (ref / "country_pacs_money.csv").read_text()
@@ -115,4 +115,4 @@ def test_country_pacs_read_in_pieces_equals_one_read(tmp_path):
             run(9); runs += 1; assert runs < 60
         assert runs > 1 and (ref / "country_pacs_money.csv").read_text() == one
     finally:
-        c.REF, fp.PROGRESS, fp.Reader, c.urllib.request.urlopen = old
+        c.REF, fp.PROGRESS, fp.Reader, c.urllib.request.urlopen = old; fp.REST_DAYS = rest

@@ -7,6 +7,11 @@ complete read until a new one is finished; only then are the output files replac
 
 A saved position is used only for the same election cycle and for at most MAX_AGE_DAYS; otherwise the read starts over.
 The progress files hold committee-level totals only (organizations, never individual donors), like the outputs.
+
+load/save/clear, Deadline and rested() also serve the other slow collectors (fara.py, vendor_lobbying.py,
+visit_statements.py): each reads for a fixed time per run and carries on next week, so no step runs into refresh_all's
+limit and every read finishes. A collector whose source changes slowly rests for REST_DAYS after a complete read, which
+keeps the weekly run, and the Actions minutes it uses, short.
 """
 import datetime as dt, json, os, time, urllib.error, urllib.parse, urllib.request
 from pathlib import Path
@@ -16,10 +21,28 @@ PROGRESS = Path(__file__).resolve().parent.parent / "data" / "progress"
 PACE = float(os.environ.get("FEC_PACE_SECONDS", "4"))          # 900 requests an hour at most, under the FEC's 1,000
 MINUTES = float(os.environ.get("FEC_MINUTES", "50"))           # reading time per run, under refresh_all's 60-minute step limit
 MAX_AGE_DAYS = 42
+REST_DAYS = int(os.environ.get("REST_DAYS", "28"))            # after a complete read, a slow-changing source is read again after this many days
 
 
 class Pause(Exception):
     """Time is up for this run, or the FEC asked us to slow down: save and carry on next week."""
+
+
+class Deadline:
+    """This run's reading time for a collector that does not go through Reader."""
+    def __init__(self, minutes, clock=time.monotonic):
+        self.clock, self.end = clock, clock() + minutes * 60
+    def up(self): return self.clock() >= self.end
+
+
+def rested(name, meta, days=None, today=None):
+    """True when no read is under way for `name` and the last complete read (the "read" date in its meta file) is under
+    `days` old: the collector skips this run. A missing or unreadable meta file never rests."""
+    days, today = REST_DAYS if days is None else days, today or dt.date.today()
+    if (PROGRESS / f"{name}.json").exists() or not Path(meta).exists(): return False
+    try: last = dt.date.fromisoformat(json.loads(Path(meta).read_text(encoding="utf-8"))["read"][:10])
+    except Exception: return False
+    return (today - last).days < days
 
 
 class Reader:

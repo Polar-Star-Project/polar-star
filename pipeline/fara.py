@@ -10,13 +10,18 @@ scanned filings, so those are not read here.
 
 Writes data/reference/fara_principals.csv: country | principal | registrant | reg_number | since | exhibit_url, and
 fara_meta.json. Nothing is written unless the registrant list and most principal lists come back.
+
+Reads in pieces (fec_pace.py): MINUTES of reading per run, then the position is saved in data/progress/fara.json and the
+next weekly run carries on; the files are replaced only when every registrant has been read. After a complete read the
+list rests for fec_pace.REST_DAYS (registrations change slowly).
 """
-import csv, datetime as dt, json, sys, time, urllib.request
+import csv, datetime as dt, json, os, sys, time, urllib.error, urllib.request
 from pathlib import Path
 from identity import USER_AGENT
 
 REF = Path(__file__).resolve().parent.parent / "data" / "reference"
 API = "https://efile.fara.gov/api/v1"
+MINUTES = float(os.environ.get("FARA_MINUTES", "30"))
 
 
 def get(url):
@@ -42,31 +47,45 @@ def rows(j):
     return []
 
 
-def main():
-    reg = rows(get(f"{API}/Registrants/json/Active"))
-    if len(reg) < 100: raise SystemExit(f"FARA returned {len(reg)} active registrants: left the list as it was.")
-    out, failed = [], 0
-    for i, r in enumerate(reg):
-        n = r.get("Registration_Number")
-        fp = get(f"{API}/ForeignPrincipals/json/Active/{n}")
-        if fp is None: failed += 1; continue
-        P = rows(fp)
-        if not P: continue
-        docs = rows(get(f"{API}/RegDocs/json/{n}"))
-        ex = {}
-        for d in sorted(docs, key=lambda d: d.get("DATE_STAMPED") or ""):
-            if (d.get("DOCUMENT_TYPE") or "").startswith("Exhibit AB") and d.get("FOREIGN_PRINCIPAL_NAME"): ex[d["FOREIGN_PRINCIPAL_NAME"].strip().lower()] = d.get("URL", "")
-        for p in P:
-            name = (p.get("FP_NAME") or "").strip().strip("'\" ")
-            out.append({"country": (p.get("COUNTRY_NAME") or "").strip().title(), "principal": name, "registrant": (p.get("REGISTRANT_NAME") or r.get("Name") or "").strip(),
-                        "reg_number": n, "since": (p.get("FP_REG_DATE") or "")[:10], "exhibit_url": ex.get(name.lower(), "")})
-        if i % 100 == 0: print(f"{i} of {len(reg)} registrants", file=sys.stderr)
-    if failed > len(reg) / 3: raise SystemExit(f"{failed} of {len(reg)} principal lists failed: left the list as it was.")
+def main(get=get, minutes=MINUTES, clock=time.monotonic):
+    import fec_pace as fp
+    name = "fara"
+    if fp.rested(name, REF / "fara_meta.json"): print("FARA list read less than a month ago: resting this week.", file=sys.stderr); return
+    st = fp.load(name, "active")
+    if "reg" not in st:                                         # the registrant list is fixed when a read starts
+        reg = rows(get(f"{API}/Registrants/json/Active"))
+        if len(reg) < 100: raise SystemExit(f"FARA returned {len(reg)} active registrants: left the list as it was.")
+        st.update(reg=[[r.get("Registration_Number"), (r.get("Name") or "").strip()] for r in reg], next=0, out=[], failed=0)
+    reg, out, dl = st["reg"], st["out"], fp.Deadline(minutes, clock)
+    while st["next"] < len(reg):
+        if dl.up():
+            fp.save(name, st)
+            print(f"paused (time is up for this run): {st['next']} of {len(reg)} registrants; the next run carries on (read started {st['started']}, run {st['runs']}). The page keeps the last complete read.", file=sys.stderr)
+            return
+        n, rname = reg[st["next"]]
+        got = get(f"{API}/ForeignPrincipals/json/Active/{n}")
+        if got is None: st["failed"] += 1; st["next"] += 1; continue
+        P = rows(got)
+        if P:
+            docs = rows(get(f"{API}/RegDocs/json/{n}"))
+            ex = {}
+            for d in sorted(docs, key=lambda d: d.get("DATE_STAMPED") or ""):
+                if (d.get("DOCUMENT_TYPE") or "").startswith("Exhibit AB") and d.get("FOREIGN_PRINCIPAL_NAME"): ex[d["FOREIGN_PRINCIPAL_NAME"].strip().lower()] = d.get("URL", "")
+            for p in P:
+                pname = (p.get("FP_NAME") or "").strip().strip("'\" ")
+                out.append({"country": (p.get("COUNTRY_NAME") or "").strip().title(), "principal": pname, "registrant": (p.get("REGISTRANT_NAME") or rname or "").strip(),
+                            "reg_number": n, "since": (p.get("FP_REG_DATE") or "")[:10], "exhibit_url": ex.get(pname.lower(), "")})
+        st["next"] += 1
+        if st["next"] % 100 == 0: print(f"{st['next']} of {len(reg)} registrants", file=sys.stderr)
+    failed = st["failed"]
+    if failed > len(reg) / 3: fp.clear(name); raise SystemExit(f"{failed} of {len(reg)} principal lists failed: left the list as it was; the next run starts over.")
     out.sort(key=lambda x: (x["country"], x["principal"].lower(), x["registrant"].lower()))
     with open(REF / "fara_principals.csv", "w", newline="", encoding="utf-8") as f:
         w = csv.DictWriter(f, fieldnames=["country", "principal", "registrant", "reg_number", "since", "exhibit_url"], delimiter="|", lineterminator="\n"); w.writeheader()
         for x in out: w.writerow({k: str(v).replace("|", "/") for k, v in x.items()})
-    (REF / "fara_meta.json").write_text(json.dumps({"read": str(dt.date.today()), "registrants": len(reg), "failed": failed, "with_principals": len({x["reg_number"] for x in out}), "principals": len(out)}, indent=1), encoding="utf-8")
+    (REF / "fara_meta.json").write_text(json.dumps({"read": str(dt.date.today()), "read_started": st["started"], "runs": st.get("runs", 0) + 1, "registrants": len(reg), "failed": failed,
+                                                    "with_principals": len({x["reg_number"] for x in out}), "principals": len(out)}, indent=1), encoding="utf-8")
+    fp.clear(name)
     print(f"{len(out)} principals for {len({x['reg_number'] for x in out})} registrants", file=sys.stderr)
 
 

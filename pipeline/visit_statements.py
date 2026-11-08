@@ -5,6 +5,10 @@ Usage (on Windows):  python pipeline\\visit_statements.py            (weekly: ne
 Reads  data/reference/legislators-current.csv (each member's official site and press feed) and data/site_data.json
 Writes data/reference/oversight_statements.csv   (rows are only ever added, never removed)
 
+Reads for MINUTES per run, taking members in turn: each run starts where the last one stopped (data/progress/statements.json),
+so every member is read every few weeks even when many sites need the slow browser. The coverage file keeps each member's
+latest read.
+
 What this is: the member, date and link of a press release on the member's official .gov site. The headline is read to decide
 whether the release is about a visit or a refusal, and is NOT kept: headlines can name a detained person, and this project stores nothing about a private person.
 What this is not: a checked record of a visit. A release that only comments on someone else's visit can match too,
@@ -15,7 +19,7 @@ House: the press-release listing at <site>/media/press-releases, which most Hous
 the site-wide /rss.xml there lists static pages, not releases, so it is not used). Senate: the member's press feed when
 the legislators file has one. Members whose site has neither are skipped and counted.
 """
-import csv, json, re, sys, urllib.error, urllib.request, xml.etree.ElementTree as ET
+import csv, json, os, re, sys, urllib.error, urllib.request, xml.etree.ElementTree as ET
 from datetime import datetime
 from email.utils import parsedate_to_datetime
 from pathlib import Path
@@ -199,10 +203,11 @@ def read_member(m, fetch, pages, since):
 WHY = {}      # member -> why the last read failed, for oversight_coverage.csv
 
 
-def collect(members, fetch, index, have, today, pages=3, progress=None, since="", fstate=None):
+def collect(members, fetch, index, have, today, pages=3, progress=None, since="", fstate=None, stop=None):
     rows, cover = [], []
     stats = {"members": 0, "feeds_read": 0, "no_feed": 0, "feed_failed": 0}
     for m in members:
+        if stop and stop(): break
         stats["members"] += 1
         if progress and stats["members"] % 25 == 0: progress(stats["members"], len(members), rows, cover)
         items, status, used = read_member(m, fetch, pages, since)
@@ -251,6 +256,12 @@ def main():
     pages = int(arg("--pages", "400" if since else "3"))
     if "--recheck" in sys.argv: members = []
     import time
+    sys.path.insert(0, str(Path(__file__).parent)); import fec_pace as fp
+    cur_file = fp.PROGRESS / "statements.json"
+    start = json.loads(cur_file.read_text(encoding="utf-8")).get("next", 0) if cur_file.exists() else 0
+    start = start if 0 <= start < len(members) else 0
+    members = members[start:] + members[:start]                       # carry on from the member where the last run stopped
+    dl = fp.Deadline(float(arg("--minutes", os.environ.get("STATEMENTS_MINUTES", "60"))))
     browser = {}
     def by_browser(u):
         """A real browser, for sites that refuse a plain request. Started only when first needed; closed at the end of the run."""
@@ -276,14 +287,23 @@ def main():
         allrows = sorted(old + rows, key=lambda r: r["date"], reverse=True)
         with open(out, "w", newline="", encoding="utf-8") as f:
             w = csv.DictWriter(f, fieldnames=FIELDS); w.writeheader(); w.writerows(allrows)
-        if cover:
-            with open(ref / "oversight_coverage.csv", "w", newline="", encoding="utf-8") as f:
-                w = csv.DictWriter(f, fieldnames=COVER); w.writeheader(); w.writerows(cover)
+        if cover:                                                     # this run's members replace their older lines; the rest are kept
+            cf = ref / "oversight_coverage.csv"
+            mine = {c["member"] for c in cover}
+            keep = [c for c in (list(csv.DictReader(open(cf, encoding="utf-8"))) if cf.exists() else []) if c.get("member") not in mine and c.get("member") in names]
+            with open(cf, "w", newline="", encoding="utf-8") as f:
+                w = csv.DictWriter(f, fieldnames=COVER, extrasaction="ignore"); w.writeheader(); w.writerows(sorted(keep + cover, key=lambda c: (c["state"], c["member"])))
         return allrows
     def progress(done, total, rows, cover):                          # so a long run shows it is alive and keeps what it has found
         print(f"  {done} of {total} members, {len(rows)} new statements so far", flush=True); save(rows, cover)
-    rows, stats, cover = collect(members, fetch, index, {r["link"] for r in old}, datetime.now().date().isoformat(), pages, progress, since, fstate)
+    names = {m["full_name"] for m in members}
+    rows, stats, cover = collect(members, fetch, index, {r["link"] for r in old}, datetime.now().date().isoformat(), pages, progress, since, fstate, dl.up)
     allrows = save(rows, cover)
+    if members:
+        fp.PROGRESS.mkdir(parents=True, exist_ok=True)
+        nxt = (start + stats["members"]) % len(members)
+        cur_file.write_text(json.dumps({"next": nxt, "members": len(members), "read_this_run": stats["members"]}), encoding="utf-8")
+        if stats["members"] < len(members): print(f"time is up for this run after {stats['members']} of {len(members)} members; the next run starts at member {nxt + 1}")
     print(f'{len(rows)} new statements, {len(allrows)} in the file; {stats["feeds_read"]} of {stats["members"]} member press pages read, '
           f'{stats["no_feed"]} with no site, {stats["feed_failed"]} unreadable')
     for party in sorted({c["party"] for c in cover}):

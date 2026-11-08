@@ -83,6 +83,7 @@ def main():
     where it got to and the next weekly run carries on. The files are replaced only when a full read is finished."""
     import fec_pace as fp
     key = os.environ.get("FEC_API_KEY", "").strip()
+    if fp.rested("country_pacs", REF / "country_pacs_meta.json"): print("Read completed less than a month ago: resting this week (fec_pace.REST_DAYS).", file=sys.stderr); return
     if not key: print("FEC_API_KEY is not set: country PACs left as they were."); return
     rd, name = fp.Reader(key), "country_pacs"
     today = dt.date.today(); cyc = today.year + today.year % 2
