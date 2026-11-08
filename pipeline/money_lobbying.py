@@ -13,7 +13,7 @@ Lobbyists are named only in lobbying_former_officials.csv, and only those who di
 named for that public post, as they reported it.
 Nothing is written unless every request succeeds.
 """
-import csv, datetime as dt, json, re, sys, time, urllib.parse, urllib.request
+import csv, datetime as dt, json, os, re, sys, time, urllib.error, urllib.parse, urllib.request
 from pathlib import Path
 from identity import USER_AGENT
 
@@ -28,6 +28,13 @@ TARGETS = {"HOUSE OF REPRESENTATIVES": "House of Representatives", "SENATE": "Se
            "Bureau of Prisons (BOP)": "Bureau of Prisons", "Health & Human Services, Dept of (HHS)": "Department of Health and Human Services", "White House Office": "White House Office",
            "Labor, Dept of (DOL)": "Department of Labor", "Federal Aviation Administration (FAA)": "Federal Aviation Administration"}
 
+
+
+def lda_auth():
+    """lda.gov allows 15 requests a minute without a key and 120 with one (LDA_API_KEY, the project's own registration):
+    ({header}, [seconds to wait after each request])."""
+    k = os.environ.get("LDA_API_KEY", "").strip()
+    return ({"Authorization": f"Token {k}"}, [0.6]) if k else ({}, [4.5])
 
 def person_name(raw):
     """A lobbyist registered under their own name, as filed: 'SMITH, JOHN A.' -> 'John A. Smith'."""
@@ -103,13 +110,19 @@ def former_officials(filings, pattern):
     return out
 
 def main():
+    key, pause = lda_auth()
     def fetch(url, tries=6):
+        err = ""
         for i in range(tries):
             try:
-                with urllib.request.urlopen(urllib.request.Request(url, headers={"Accept": "application/json", "User-Agent": USER_AGENT}), timeout=90) as r:
-                    time.sleep(4.5); return json.loads(r.read().decode("utf-8"))           # the API allows 15 requests a minute without a key
+                with urllib.request.urlopen(urllib.request.Request(url, headers={"Accept": "application/json", "User-Agent": USER_AGENT, **key}), timeout=90) as r:
+                    time.sleep(pause[0]); return json.loads(r.read().decode("utf-8"))
+            except urllib.error.HTTPError as e:
+                err = str(e)[:120]
+                if e.code in (401, 403) and key: print("LDA_API_KEY was refused; going on without it (15 requests a minute)", flush=True); key.clear(); pause[0] = 4.5; continue
+                time.sleep(30 if e.code == 429 else 8)
             except Exception as e:
-                err = str(e)[:120]; time.sleep(30 if "429" in err else 8)
+                err = str(e)[:120]; time.sleep(8)
         raise SystemExit(f"lda.gov did not answer: {err}. Nothing written.")
     rd = lambda n: list(csv.DictReader(open(REF / n, encoding="utf-8"), delimiter="|")) if (REF / n).exists() else []
     old_names = {norm(r["firm"]): r["firm"] for r in rd("lobbying_firms.csv") if "personal name" not in r["firm"]}

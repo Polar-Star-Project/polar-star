@@ -14,7 +14,7 @@ and quarter. A filing counts for a company only when the client name on the fili
   example      the newest report that lists ICE, or else the newest that lists Immigration (a link to the filing itself)
 Writes data/reference/vendor_lobbying.csv and vendor_lobbying_meta.json. Nothing is written unless most requests succeed.
 """
-import csv, datetime as dt, json, re, sys, time, urllib.parse, urllib.request
+import csv, datetime as dt, json, os, re, sys, time, urllib.error, urllib.parse, urllib.request
 from pathlib import Path
 from identity import USER_AGENT
 
@@ -23,6 +23,13 @@ API = "https://lda.gov/api/v1/filings/?"
 FIRST_YEAR, MIN_USD = 2023, 10_000_000
 SUFFIX = {"INC", "INCORPORATED", "LLC", "L", "C", "LLP", "LP", "CORP", "CORPORATION", "CO", "COMPANY", "THE", "FEDERAL", "USA", "US", "LTD", "PLC", "GROUP"}
 
+
+
+def lda_auth():
+    """lda.gov allows 15 requests a minute without a key and 120 with one (LDA_API_KEY, the project's own registration):
+    ({header}, [seconds to wait after each request])."""
+    k = os.environ.get("LDA_API_KEY", "").strip()
+    return ({"Authorization": f"Token {k}"}, [0.6]) if k else ({}, [4.2])
 
 def core(name):
     """The words that name the company, without legal suffixes: "CACI, INC. - FEDERAL" -> "CACI"."""
@@ -57,13 +64,17 @@ def tally(filings, key):
 
 
 def main():
+    key, pause = lda_auth()
     def fetch(url):
         for i in range(5):
             try:
-                with urllib.request.urlopen(urllib.request.Request(url, headers={"Accept": "application/json", "User-Agent": USER_AGENT}), timeout=90) as r:
-                    time.sleep(4.2); return json.loads(r.read().decode("utf-8"))      # about 15 requests a minute without a key
+                with urllib.request.urlopen(urllib.request.Request(url, headers={"Accept": "application/json", "User-Agent": USER_AGENT, **key}), timeout=90) as r:
+                    time.sleep(pause[0]); return json.loads(r.read().decode("utf-8"))
+            except urllib.error.HTTPError as e:
+                if e.code in (401, 403) and key: print("LDA_API_KEY was refused; going on without it (15 requests a minute)", flush=True); key.clear(); pause[0] = 4.2; continue
+                time.sleep(30 if e.code == 429 else 8)
             except Exception as e:
-                err = str(e); time.sleep(30 if "429" in err else 8)
+                time.sleep(8)
         return None
     rd = lambda n: list(csv.DictReader(open(REF / n, encoding="utf-8"), delimiter="|")) if (REF / n).exists() else []
     tot = {}
