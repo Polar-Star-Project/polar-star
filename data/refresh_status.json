@@ -1,5 +1,5 @@
 {
- "started": "2026-11-08T16:28:26+00:00",
+ "started": "2026-11-08T21:11:28+00:00",
  "steps": {
   "disputes": "ok",
   "dockets": "ok",
@@ -95,8 +95,8 @@
   "sec": 0.0,
   "topdonors": 50.1,
   "countrypacs": 18.9,
-  "tests": 1.0,
-  "build": 0.2
+  "tests": 1.1,
+  "build": 0.4
  },
  "errors": {
   "awards": "  opened 600 of 1162 awards (0 to retry) /   opened 700 of 1162 awards (0 to retry) /   opened 800 of 1162 awards (0 to retry) /   opened 900 of 1162 awards (16 to retry) /   opened 1000 of 1162 awards (16 to retry) /   opened 1100 of 1162 awards (16 to retry) / stopped after 40 minutes",
@@ -105,6 +105,6 @@
   "fara": "0 of 538 registrants / 100 of 538 registrants / 200 of 538 registrants / stopped after 40 minutes"
  },
  "earlier_run_started": "2026-11-08T16:27:04+00:00",
- "finished": "2026-11-08T16:29:37+00:00",
+ "finished": "2026-11-08T21:12:57+00:00",
  "page_rebuilt": true
 }
