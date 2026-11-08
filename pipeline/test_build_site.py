@@ -212,6 +212,21 @@ def test_refresh_steps_keep_order_and_reject_unknown_names():
     assert names[:4] == ["disputes", "dockets", "hotlines", "familyorgs"]           # short independent checks survive a cut-off run
 
 
+def test_groups_split_the_collectors_and_join_into_one_record(tmp_path):
+    import json, refresh_all as r
+    names = [n for n, _, _ in r.STEPS]
+    groups = {r.GROUP_OF(n) for n in names}
+    assert groups == {"main", "money", "build"} and r.MONEY <= set(names)                       # every money step exists
+    money = [n for n in names if r.GROUP_OF(n) == "money"]
+    assert money[-2:] == ["topdonors", "countrypacs"]                                            # the slowest last
+    (tmp_path / "a_main.json").write_text(json.dumps({"started": "2026-11-09T11:20:00+00:00", "steps": {"dockets": "ok"}, "minutes": {"dockets": 9}, "finished": "x"}))
+    (tmp_path / "a_money.json").write_text(json.dumps({"started": "2026-11-09T11:19:00+00:00", "steps": {"fec": "ok"}, "errors": {}}))
+    st = r.join([tmp_path / "a_main.json", tmp_path / "a_money.json"], tmp_path / "out.json")
+    assert st["started"] == "2026-11-09T11:19:00+00:00" and st["steps"]["dockets"] == st["steps"]["fec"] == "ok"
+    assert st["steps"]["countrypacs"].startswith("cut off") and "flights" not in st["steps"]     # money stopped early; main finished
+    assert json.loads((tmp_path / "out.json").read_text())["groups"]["a_money"].startswith("stopped")
+
+
 def test_a_partial_run_adds_to_the_last_status(tmp_path):
     import json, refresh_all as r
     (tmp_path / "data").mkdir(); (tmp_path / "site").mkdir()

@@ -1,4 +1,4 @@
-# Weekly: fetch new data, test, rebuild the page, save the data back to the repository.
+# Weekly: fetch new data in two groups side by side (main, money), then test, rebuild the page and save it.
 # publish.yml then mirrors the result to the public repository, where pages.yml publishes the page.
 # Also runs when started by hand (Actions tab > Refresh and publish > Run workflow).
 name: Refresh and publish
@@ -22,11 +22,14 @@ concurrency:
   group: refresh
   cancel-in-progress: false
 jobs:
-  refresh:
-    # Runs only in the private working repository. The copy mirrored into the public repository does nothing.
+  main:
+    # Every collector except the FEC and lobbying ones.
     if: github.repository == 'Polar-Star-Project/polar-star-development'
     runs-on: ubuntu-latest
     timeout-minutes: 340
+    env:
+      GROUP: main
+      REFRESH_STATUS: data/refresh_status_main.json
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262   # v4.4.0
       - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065   # v5.6.0
@@ -36,41 +39,106 @@ jobs:
       - run: pip install -r requirements.txt
       - run: python -m playwright install --with-deps chromium
       - run: sudo apt-get install -y tesseract-ocr poppler-utils
-      - name: Refresh
-        id: refresh
-        # Each step has its own time limit (refresh_all.py); this is a backstop. If the refresh is cut off, the run goes on to
-        # rebuild and publish the page from whatever data it has, instead of being cancelled before it publishes.
-        timeout-minutes: 290
+      - name: Refresh (main group)
+        # Each step has its own time limit (refresh_all.py); this is a backstop for the group. The record of each step
+        # is saved as it finishes, so a group cut off here still shows how far it got.
+        timeout-minutes: 300
         continue-on-error: true
         env:
-          FEC_API_KEY: ${{ secrets.FEC_API_KEY }}      # optional: without it the political committee figures are left as they are
-          LDA_API_KEY: ${{ secrets.LDA_API_KEY }}
-          COURTLISTENER_TOKEN: ${{ secrets.COURTLISTENER_TOKEN }}   # optional: the project's CourtListener account; court dockets for the disputes tab
-          IDENTITY_DENYLIST: ${{ secrets.IDENTITY_DENYLIST }}      # the tests check no file names a person; without it the tests fail and the page is not rebuilt
+          FEC_API_KEY: ${{ secrets.FEC_API_KEY }}
+          LDA_API_KEY: ${{ secrets.LDA_API_KEY }}      # 120 lda.gov requests a minute instead of 15
+          COURTLISTENER_TOKEN: ${{ secrets.COURTLISTENER_TOKEN }}   # court dockets for the disputes tab
           ONLY: ${{ github.event.inputs.only }}
           SKIP: ${{ github.event.inputs.skip }}
         run: |
-          args=""
+          args="--group main"
           if [ -n "$ONLY" ]; then args="$args --only $ONLY"; fi
           if [ -n "$SKIP" ]; then args="$args --skip $SKIP"; fi
           xvfb-run -a python pipeline/refresh_all.py $args
-      - name: Rebuild the page if the refresh was cut off
-        if: steps.refresh.outcome != 'success'
+      - name: Save this group's data to the repository
+        if: always()
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A data
+          git diff --cached --quiet || git commit -m "Weekly refresh $(date -u +%F) ($GROUP)"
+          # the other group pushes too: replay this commit on top, keeping this group's freshly read data on a conflict
+          for i in 1 2 3 4 5; do git push && exit 0; sleep $((RANDOM % 20 + 5)); git pull --rebase -X theirs || { git rebase --abort; exit 1; }; done; exit 1
+  money:
+    # The FEC and lobbying collectors: slow, because those APIs limit requests per minute and hour.
+    if: github.repository == 'Polar-Star-Project/polar-star-development'
+    runs-on: ubuntu-latest
+    timeout-minutes: 340
+    env:
+      GROUP: money
+      REFRESH_STATUS: data/refresh_status_money.json
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262   # v4.4.0
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065   # v5.6.0
+        with:
+          python-version: "3.12"
+          cache: pip
+      - run: pip install -r requirements.txt
+      - run: python -m playwright install --with-deps chromium      # sec_watch reads one page in a browser
+      - name: Refresh (money group)
+        # Each step has its own time limit (refresh_all.py); this is a backstop for the group. The record of each step
+        # is saved as it finishes, so a group cut off here still shows how far it got.
+        timeout-minutes: 300
+        continue-on-error: true
         env:
-          IDENTITY_DENYLIST: ${{ secrets.IDENTITY_DENYLIST }}
-        run: xvfb-run -a python pipeline/refresh_all.py --only tests,build
+          FEC_API_KEY: ${{ secrets.FEC_API_KEY }}
+          LDA_API_KEY: ${{ secrets.LDA_API_KEY }}      # 120 lda.gov requests a minute instead of 15
+          COURTLISTENER_TOKEN: ${{ secrets.COURTLISTENER_TOKEN }}   # court dockets for the disputes tab
+          ONLY: ${{ github.event.inputs.only }}
+          SKIP: ${{ github.event.inputs.skip }}
+        run: |
+          args="--group money"
+          if [ -n "$ONLY" ]; then args="$args --only $ONLY"; fi
+          if [ -n "$SKIP" ]; then args="$args --skip $SKIP"; fi
+          xvfb-run -a python pipeline/refresh_all.py $args
+      - name: Save this group's data to the repository
+        if: always()
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A data
+          git diff --cached --quiet || git commit -m "Weekly refresh $(date -u +%F) ($GROUP)"
+          # the other group pushes too: replay this commit on top, keeping this group's freshly read data on a conflict
+          for i in 1 2 3 4 5; do git push && exit 0; sleep $((RANDOM % 20 + 5)); git pull --rebase -X theirs || { git rebase --abort; exit 1; }; done; exit 1
+  build:
+    # After both groups: join their records, test, rebuild the page, and save it. publish.yml mirrors the result.
+    needs: [main, money]
+    if: always() && github.repository == 'Polar-Star-Project/polar-star-development'
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262   # v4.4.0
+        with:
+          ref: main          # what both groups saved, not the commit the run started from
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065   # v5.6.0
+        with:
+          python-version: "3.12"
+          cache: pip
+      - run: pip install -r requirements.txt
+      - run: python -m playwright install --with-deps chromium
+      - run: sudo apt-get install -y tesseract-ocr poppler-utils
+      - name: Test and rebuild the page
+        env:
+          IDENTITY_DENYLIST: ${{ secrets.IDENTITY_DENYLIST }}      # the tests check no file names a person; without it the page is not rebuilt
+        run: |
+          python pipeline/refresh_all.py --join data/refresh_status_main.json data/refresh_status_money.json
+          xvfb-run -a python pipeline/refresh_all.py --only tests,build
       - name: Weekly to-do report
         if: always()
         continue-on-error: true
         run: python pipeline/todo_report.py
-      - name: Save refreshed data to the repository
+      - name: Save the page to the repository
         if: always()
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add -A data site
-          git diff --cached --quiet || git commit -m "Weekly refresh $(date -u +%F)"
-          # main may have moved while the refresh ran (hours, for the FEC steps): replay this commit on top, keeping the freshly read data on a conflict
+          git diff --cached --quiet || git commit -m "Weekly refresh $(date -u +%F): page"
           for i in 1 2 3; do git push && exit 0; git pull --rebase -X theirs || { git rebase --abort; exit 1; }; done; exit 1
       - name: Post the to-do on its issue
         # One open issue titled "Weekly to-do"; each run adds the week's list as a comment, so the publisher gets one

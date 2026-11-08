@@ -46,12 +46,13 @@ STEPS = [  # name, command after "python", required
     ("politicians", ["pipeline/politicians.py"], False),
     ("donors",     ["pipeline/money_donors.py"], False),
     ("membercom",  ["pipeline/member_committees.py"], False),
-    ("topdonors",  ["pipeline/member_top_donors.py"], False),
-    ("countrypacs", ["pipeline/country_pacs.py"], False),
     ("fara",       ["pipeline/fara.py"], False),
     ("firms",      ["pipeline/firm_profiles.py"], False),
     ("firmbase",   ["pipeline/firm_base.py"], False),
     ("sec",        ["pipeline/sec_watch.py"], False),
+    # the two slowest FEC readers last in the money group, so a cut-off loses only them
+    ("topdonors",  ["pipeline/member_top_donors.py"], False),
+    ("countrypacs", ["pipeline/country_pacs.py"], False),
     ("social",     ["pipeline/social_check.py"], False),
     ("officials",  ["pipeline/officials_check.py"], False),
     ("legalaid",   ["pipeline/eoir_probono.py"], False),
@@ -74,6 +75,12 @@ LIMIT = 40
 LIMITS = {"records": 60, "transfers": 60, "fec": 90, "jfc": 60, "donors": 60, "membercom": 60, "topdonors": 60, "countrypacs": 60,
           "firmbase": 60, "flights": 60, "tests": 30, "build": 20, "dockets": 20}
 
+# The weekly workflow runs two groups side by side, each in its own job with its own time limit: "money" (the FEC and
+# lobbying collectors, slow because those APIs limit requests per minute and hour) and "main" (everything else). The
+# tests and the build run afterwards, in a third job, on what both saved.
+MONEY = {"politicians", "membercom", "lobbying", "vendorlobby", "fec", "jfc", "donors", "fara", "firms", "firmbase", "sec", "topdonors", "countrypacs"}
+GROUP_OF = lambda name: "build" if name in ("tests", "build") else "money" if name in MONEY else "main"
+
 ON_REQUEST = {"probe"}   # steps that run only when named in --only
 MONTHLY = set()          # steps that run only in the first week of a month (none now: the audit check is weekly again)
 
@@ -89,10 +96,12 @@ def pick(names, only, skip):
 def main(argv):
     arg = lambda flag: argv[argv.index(flag) + 1].split(",") if flag in argv else None
     todo = pick([n for n, _, _ in STEPS], arg("--only"), arg("--skip"))
+    if arg("--group"): todo = [n for n in todo if GROUP_OF(n) in arg("--group")]
+    sp = ROOT / os.environ.get("REFRESH_STATUS", "data/refresh_status.json")     # a group writes its own file; the build job joins them
     page, keep = ROOT / "site" / "index.html", ROOT / "site" / "index.previous.html"
     status, ok = {"started": dt.datetime.now(dt.timezone.utc).isoformat(timespec="seconds"), "steps": {}, "minutes": {}}, True
-    sp = ROOT / "data" / "refresh_status.json"
-    if arg("--only") and sp.exists():           # a partial run (say, the rebuild after a cut-off refresh) adds to the last status, so what the full run did stays visible
+    partial = arg("--only") or arg("--group")
+    if partial and sp.exists():           # a partial run (say, the rebuild after a cut-off refresh) adds to the last status, so what the full run did stays visible
         prev = json.loads(sp.read_text(encoding="utf-8"))
         status["steps"] = {k: v for k, v in (prev.get("steps") or {}).items() if k not in todo}
         status["errors"] = {k: v for k, v in (prev.get("errors") or {}).items() if k not in todo}
@@ -101,6 +110,7 @@ def main(argv):
     for name, cmd, required in STEPS:
         if name not in todo: continue
         if name in ON_REQUEST and not arg("--only"): continue
+        save = lambda: sp.write_text(json.dumps(status, indent=1), encoding="utf-8")    # after every step: a job stopped from outside still leaves its record
         if name in MONTHLY and not arg("--only") and dt.date.today().day > 7: print(f"=== {name} === skipped: runs in the first week of each month", flush=True); status["steps"][name] = "not due"; continue
         if name == "build" and page.exists(): shutil.copy2(page, keep)
         print(f"=== {name} ===", flush=True)
@@ -119,12 +129,33 @@ def main(argv):
         if code != 0:
             print(f"{name} FAILED (exit {code})" + ("; stopping, page left as it was" if required else "; its data is left as it was"), flush=True)
             if name == "build" and keep.exists(): shutil.copy2(keep, page)
-            if required: ok = False; break
+            if required: ok = False; save(); break
+        save()
     status["finished"] = dt.datetime.now(dt.timezone.utc).isoformat(timespec="seconds"); status["page_rebuilt"] = status["steps"].get("build") == "ok"
-    (ROOT / "data" / "refresh_status.json").write_text(json.dumps(status, indent=1), encoding="utf-8")
+    sp.write_text(json.dumps(status, indent=1), encoding="utf-8")
     print(json.dumps(status["steps"]), flush=True)
     return 0 if ok else 1
 
 
+def join(paths, out=None):
+    """The two groups' records -> data/refresh_status.json, one record for the week (the build job then adds tests and build)."""
+    out = out or ROOT / "data" / "refresh_status.json"
+    st = {"started": "", "steps": {}, "errors": {}, "minutes": {}, "groups": {}}
+    for p in paths:
+        p = Path(p)
+        if not p.exists(): st["groups"][p.stem] = "no record (the job did not start or was cancelled)"; continue
+        d = json.loads(p.read_text(encoding="utf-8"))
+        for k in ("steps", "errors", "minutes"): st[k].update(d.get(k) or {})
+        st["started"] = min(x for x in (st["started"], d.get("started", "")) if x) if d.get("started") else st["started"]
+        st["groups"][p.stem] = "finished" if d.get("finished") else "stopped before the end (time limit)"
+    for name, _, _ in STEPS:                     # a step of a group that ran out of time and never started shows as such, not as missing
+        g = GROUP_OF(name)
+        if g != "build" and name not in ON_REQUEST and name not in st["steps"] and any(k.endswith(g) and v != "finished" for k, v in st["groups"].items()):
+            st["steps"][name] = "cut off or not reached (time limit)"
+    out.write_text(json.dumps(st, indent=1), encoding="utf-8")
+    return st
+
+
 if __name__ == "__main__":
+    if sys.argv[1:2] == ["--join"]: join(sys.argv[2:]); sys.exit(0)
     sys.exit(main(sys.argv[1:]))
