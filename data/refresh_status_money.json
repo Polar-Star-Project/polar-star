@@ -1,0 +1,39 @@
+{
+ "started": "2026-11-08T02:18:03+00:00",
+ "steps": {
+  "lobbying": "ok",
+  "vendorlobby": "timed out",
+  "fec": "ok",
+  "jfc": "ok",
+  "politicians": "ok",
+  "donors": "ok",
+  "membercom": "ok",
+  "fara": "timed out",
+  "firms": "ok",
+  "firmbase": "ok",
+  "sec": "ok",
+  "topdonors": "ok",
+  "countrypacs": "ok"
+ },
+ "minutes": {
+  "lobbying": 0.9,
+  "vendorlobby": 40.0,
+  "fec": 4.6,
+  "jfc": 7.8,
+  "politicians": 0.0,
+  "donors": 7.8,
+  "membercom": 1.2,
+  "fara": 40.0,
+  "firms": 18.1,
+  "firmbase": 40.7,
+  "sec": 0.0,
+  "topdonors": 50.0,
+  "countrypacs": 50.0
+ },
+ "errors": {
+  "vendorlobby": "stopped after 40 minutes",
+  "fara": "0 of 538 registrants / 100 of 538 registrants / 200 of 538 registrants / 300 of 538 registrants / stopped after 40 minutes"
+ },
+ "finished": "2026-11-08T06:39:19+00:00",
+ "page_rebuilt": false
+}
