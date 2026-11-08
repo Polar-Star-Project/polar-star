@@ -37,7 +37,7 @@ COURT_ACTION = re.compile(r"^(?:\((?:text[- ]only|court only)\)\s*)?(?:"
     r"notice of appeal(?! due)|(?:joint )?stipulation (?:of|for) (?:voluntary )?dismissal|notice of voluntary dismissal|"
     r"(?:minute |memorandum |text |electronic )?order\b.*\b(?:dismiss\w*|injunction|restraining|judgment|stay(?:ed|ing)?\b|remand\w*|vacat\w*|moot|clos(?:e|ed|ing) (?:the )?case|terminat\w*|declaratory)"
     r")", re.I | re.S)
-NOT_AN_ACTION = re.compile(r"\b(?:due letter|transmission of|transcript|notice to usca|appearance|withdraw\w*|pro hac vice|extension of time|schedul\w*)\b", re.I)
+NOT_AN_ACTION = re.compile(r"\b(?:due letter|transmission of|transcript|notice to usca|appearance|withdraw\w*|pro hac vice|extension of time|schedul\w*|deadlines?|briefing|page limits?|hearing (?:is )?(?:set|reset|continued|vacated))\b", re.I)
 
 
 def classify(text):
@@ -171,7 +171,7 @@ def main():
     st = {r["id"]: (r.get("status_date") or r.get("date") or "") for r in csv.DictReader(open(REF / "ice_local_disputes.csv", encoding="utf-8"), delimiter="|")}
     out, used = run(rows, prev, fetcher(os.environ.get("COURTLISTENER_TOKEN", "").strip()), dt.date.today(), status=st)
     with open(pp, "w", newline="", encoding="utf-8") as f:
-        w = csv.DictWriter(f, fieldnames=COLS, delimiter="|", lineterminator="\n", quoting=csv.QUOTE_NONE, escapechar="\\"); w.writeheader(); w.writerows(out)
+        w = csv.DictWriter(f, fieldnames=COLS, delimiter="|", lineterminator="\n"); w.writeheader(); w.writerows(out)   # standard quoting: every reader of this file uses the default csv reader
     found = sum(1 for o in out if o["cl_id"])
     print(f"{found} of {len(out)} dockets found on CourtListener; {sum(1 for o in out if o['entry_date'])} with a newest entry; "
           f"{sum(1 for o in out if o['auto_date'])} with a status from the docket; {used} requests")

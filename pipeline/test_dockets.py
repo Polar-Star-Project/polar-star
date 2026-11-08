@@ -56,7 +56,9 @@ def test_court_actions_are_recognised_by_how_the_entry_begins():
              "TRANSCRIPT of Sentencing Hearing as to Hannah C Dugan held on July 8, 2026", "ORDER granting Motion for Extension of Time to file answer",
              "SCHEDULING ORDER: status conference set for 11/20/2026", "MOTION to Dismiss for Lack of Jurisdiction filed by the State",
              "(Text-Only) NOTICE to USCA of subsequent filing in a civil case, Re: Notice of Withdrawal as Attorney 83",
-             "ORDER setting argument", "REPLY to Response to Motion re 7 MOTION to Dismiss"]
+             "ORDER setting argument", "REPLY to Response to Motion re 7 MOTION to Dismiss",
+             "ORDER GRANTING STIPULATED MOTION TO STAY DEADLINES FOR: (1) PLAINTIFFS OPPOSITION TO DEFENDANTS MOTION",   # seen 2026-11-08
+             "ORDER granting motion to vacate hearing on motion to dismiss; hearing vacated"]
     assert [classify(t) for t in court] == ["court"] * len(court), [t for t in court if classify(t) != "court"]
     assert [classify(t) for t in other] == ["other"] * len(other), [t for t in other if classify(t) != "other"]
     assert classify("") == classify("   ") == "unreadable"
