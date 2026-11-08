@@ -918,3 +918,14 @@ status on file and sorts each one with `classify()`:
 This replaces the earlier rule that docket text was never applied automatically (decision 2026-11-06). The hand-written status
 in `ice_local_disputes.csv` is kept and shown again if the automatic one is ever removed. Whether a case is over (`final`) is
 still set by hand: a judgment can be appealed. Tests: `test_dockets.py`, `test_disputes.py`.
+
+## The two long FEC readers read in pieces (7 November 2026)
+
+`member_top_donors.py` (step `topdonors`) and `country_pacs.py` (step `countrypacs`) need more FEC requests than one weekly
+run allows under the key's 1,000-an-hour limit, and the project does not ask the FEC for a higher limit. Through
+`pipeline/fec_pace.py` they read at a steady pace (one request every 4 seconds, `FEC_PACE_SECONDS`), for 50 minutes a run
+(`FEC_MINUTES`), and stop early if the FEC says "too many requests". Where they got to is saved in `data/progress/<name>.json`
+(committee-level totals and the position, never an individual), and the next weekly run carries on. The page keeps the last
+complete read until a new one is finished; then the files are replaced, the meta file records when the read started and how
+many runs it took, and the progress file is removed. A saved position older than 42 days, or from another election cycle, is
+dropped and the read starts over. Tests: `test_fec_pace.py` (a read cut into pieces gives exactly the one-go result).

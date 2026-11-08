@@ -23,7 +23,8 @@ For each listed committee, in the current two-year cycle, from its own reports:
              added to G.
   spent      (S/O) Schedule E independent expenditures it reported to support or oppose a current member.
 
-Writes data/reference/country_pacs.csv, country_pacs_money.csv and country_pacs_meta.json.
+Writes data/reference/country_pacs.csv, country_pacs_money.csv and country_pacs_meta.json. Reads in pieces across weekly runs
+(fec_pace.py); the files are replaced only when a full read is finished.
 """
 import csv, datetime as dt, json, os, re, sys, time, urllib.parse, urllib.request
 from pathlib import Path
@@ -78,80 +79,91 @@ def earmarked(r):
     return "EARMARK" in t or "CONDUIT" in t or (r.get("disbursement_type") or "") in ("24T", "24Z")
 
 def main():
+    """Reads at a steady pace and in pieces (fec_pace.py): when this run's time is up, or the FEC asks to slow down, it saves
+    where it got to and the next weekly run carries on. The files are replaced only when a full read is finished."""
+    import fec_pace as fp
     key = os.environ.get("FEC_API_KEY", "").strip()
     if not key: print("FEC_API_KEY is not set: country PACs left as they were."); return
-    def call(path, **q):
-        url = f"{API}{path}?" + urllib.parse.urlencode(dict(q, api_key=key), doseq=True); err = ""
-        for i in range(60):
-            try:
-                with urllib.request.urlopen(url, timeout=120) as r: time.sleep(0.6); return json.loads(r.read().decode("utf-8"))
-            except Exception as e:
-                err = str(e)[:160]
-                busy = "429" in err or any(f"HTTP Error {c}" in err for c in (500, 502, 503, 504)) or "timed out" in err   # the FEC is busy, not refusing: wait it out
-                if not busy and (i >= 6 or "422" in err): break
-                if busy and i >= 40: break
-                time.sleep(120 if "429" in err else 45 if busy else 8)
-        raise SystemExit(f"FEC did not answer {path}: {err}. Nothing written.")
+    rd, name = fp.Reader(key), "country_pacs"
     today = dt.date.today(); cyc = today.year + today.year % 2
-    # rule A: search committee names for every country word
-    found = {}
-    for country, words in COUNTRIES.items():
-        for w in words:
-            page = 1
+    st = fp.load(name, cyc)
+    if "words" not in st:
+        cur = {r["bioguide"] for r in csv.DictReader(open(REF / "members.csv", encoding="utf-8"), delimiter="|") if r["current"]}
+        legs = json.load(urllib.request.urlopen(SRC + "legislators-current.json", timeout=120))
+        st.update(words=[[c, w] for c, ws in COUNTRIES.items() for w in ws], w_next=0, w_page=1, found={}, a_next=0,
+                  own={r["committee_id"]: r["bioguide"] for r in csv.DictReader(open(REF / "member_committees.csv", encoding="utf-8"), delimiter="|") if r["bioguide"] in cur and r["designation"] in ("P", "A")},
+                  cand={c: l["id"]["bioguide"] for l in legs for c in l["id"].get("fec", []) if l["id"]["bioguide"] in cur},
+                  m_next=0, m_k=0, m_last={}, m_part="b", money=[])
+    found, own, cand = st["found"], st["own"], st["cand"]
+    money = {(m[0], m[1], m[2]): [m[3], m[4]] for m in st["money"]}
+    affiliates = list(csv.DictReader(open(REF / "country_pacs_affiliates.csv", encoding="utf-8"), delimiter="|"))
+    try:
+        # rule A: search committee names for every country word
+        while st["w_next"] < len(st["words"]):
+            country, w = st["words"][st["w_next"]]; words = COUNTRIES.get(country, [w])
             while True:
-                j = call("/committees/", q=w, committee_type=PAC_TYPES, per_page=100, page=page, cycle=[cyc, cyc - 2])
+                j = rd.call("/committees/", q=w, committee_type=PAC_TYPES, per_page=100, page=st["w_page"], cycle=[cyc, cyc - 2])
                 for c in j.get("results") or []:
                     if c.get("designation") in ("D", "J"): continue
                     if matches(c.get("name") or "", words): found.setdefault(c["committee_id"], {"committee_id": c["committee_id"], "name": c["name"], "country": country, "basis": "name", "source": ""})
-                if page >= (j.get("pagination") or {}).get("pages", 1): break
-                page += 1
-    # rule B: affiliates named in a public record
-    for r in csv.DictReader(open(REF / "country_pacs_affiliates.csv", encoding="utf-8"), delimiter="|"):
-        j = call("/committees/", q=r["name"], per_page=20)
-        want = re.sub(r"\W", "", r["name"].upper())
-        hit = [c for c in j.get("results") or [] if re.sub(r"\W", "", (c.get("name") or "").upper()).startswith(want) and c.get("committee_type") in PAC_TYPES]
-        if not hit: print(f"affiliate not found at the FEC: {r['name']}", file=sys.stderr); continue
-        cid = hit[0]["committee_id"]; d = (call(f"/committee/{cid}/").get("results") or [{}])[0]
-        if fec_affiliated(d, r["affiliate_of"]):
-            found.setdefault(cid, {"committee_id": cid, "name": hit[0]["name"], "country": r["country"], "basis": "affiliate of " + r["affiliate_of"], "source": f"https://www.fec.gov/data/committee/{cid}/"})
-        else: print(f"not listed: the FEC's record for {r['name']} does not name {r['affiliate_of']} as an affiliated committee", file=sys.stderr)
-    print(f"{len(found)} committees match the rule", file=sys.stderr)
-    # money to current members
-    cur = {r["bioguide"] for r in csv.DictReader(open(REF / "members.csv", encoding="utf-8"), delimiter="|") if r["current"]}
-    own = {r["committee_id"]: r["bioguide"] for r in csv.DictReader(open(REF / "member_committees.csv", encoding="utf-8"), delimiter="|") if r["bioguide"] in cur and r["designation"] in ("P", "A")}
-    legs = json.load(urllib.request.urlopen(SRC + "legislators-current.json", timeout=120))
-    cand = {c: l["id"]["bioguide"] for l in legs for c in l["id"].get("fec", []) if l["id"]["bioguide"] in cur}
-    money = {}
-    targets = sorted(own)
-    for cid in sorted(found):
-        # The committee's own report of what it paid out, asked for 100 members' committees at a time: a large committee's
-        # full list (tens of thousands of forwarded donations) makes the FEC time out, while these narrower asks answer.
-        for k in range(0, len(targets), 100):
-            last = {}
-            while True:
-                j = call("/schedules/schedule_b/", committee_id=cid, recipient_committee_id=targets[k:k + 100], two_year_transaction_period=cyc, per_page=100, sort="disbursement_date", **last)
+                if st["w_page"] >= (j.get("pagination") or {}).get("pages", 1): break
+                st["w_page"] += 1
+            st["w_next"], st["w_page"] = st["w_next"] + 1, 1
+        # rule B: affiliates named in a public record
+        while st["a_next"] < len(affiliates):
+            r = affiliates[st["a_next"]]
+            j = rd.call("/committees/", q=r["name"], per_page=20)
+            want = re.sub(r"\W", "", r["name"].upper())
+            hit = [c for c in j.get("results") or [] if re.sub(r"\W", "", (c.get("name") or "").upper()).startswith(want) and c.get("committee_type") in PAC_TYPES]
+            if not hit: print(f"affiliate not found at the FEC: {r['name']}", file=sys.stderr)
+            else:
+                cid = hit[0]["committee_id"]; d = (rd.call(f"/committee/{cid}/").get("results") or [{}])[0]
+                if fec_affiliated(d, r["affiliate_of"]):
+                    found.setdefault(cid, {"committee_id": cid, "name": hit[0]["name"], "country": r["country"], "basis": "affiliate of " + r["affiliate_of"], "source": f"https://www.fec.gov/data/committee/{cid}/"})
+                else: print(f"not listed: the FEC's record for {r['name']} does not name {r['affiliate_of']} as an affiliated committee", file=sys.stderr)
+            st["a_next"] += 1
+        if st["a_next"] == len(affiliates) and st["m_next"] == 0 and "listed" not in st:
+            st["listed"] = sorted(found); print(f"{len(found)} committees match the rule", file=sys.stderr)
+        # money to current members, one committee at a time
+        listed, targets = st["listed"], sorted(own)
+        while st["m_next"] < len(listed):
+            cid = listed[st["m_next"]]
+            if st["m_part"] == "b":
+                # The committee's own report of what it paid out, asked for 100 members' committees at a time: a large committee's
+                # full list (tens of thousands of forwarded donations) makes the FEC time out, while these narrower asks answer.
+                while st["m_k"] < len(targets):
+                    while True:
+                        j = rd.call("/schedules/schedule_b/", committee_id=cid, recipient_committee_id=targets[st["m_k"]:st["m_k"] + 100], two_year_transaction_period=cyc, per_page=100, sort="disbursement_date", **st["m_last"])
+                        res = j.get("results") or []
+                        for r in res:
+                            if (r.get("memo_code") or "").upper() == "X": continue
+                            bg = own.get(r.get("recipient_committee_id"))
+                            if not bg: continue
+                            kind = "E" if earmarked(r) else "G"
+                            m = money.setdefault((cid, bg, kind), [0.0, 0]); m[0] += r.get("disbursement_amount") or 0; m[1] += 1
+                        li = (j.get("pagination") or {}).get("last_indexes")
+                        if not res or not li: break
+                        st["m_last"] = {k2: v for k2, v in li.items() if v is not None}
+                    st["m_k"], st["m_last"] = st["m_k"] + 100, {}
+                st["m_part"] = "e"
+            while True:                                       # regular reports only (not the 24- and 48-hour notices, which repeat them)
+                j = rd.call("/schedules/schedule_e/", committee_id=cid, cycle=cyc, is_notice="false", per_page=100, sort="expenditure_date", **st["m_last"])
                 res = j.get("results") or []
                 for r in res:
                     if (r.get("memo_code") or "").upper() == "X": continue
-                    bg = own.get(r.get("recipient_committee_id"))
-                    if not bg: continue
-                    kind = "E" if earmarked(r) else "G"
-                    m = money.setdefault((cid, bg, kind), [0.0, 0]); m[0] += r.get("disbursement_amount") or 0; m[1] += 1
+                    bg, kind = cand.get(r.get("candidate_id")), {"S": "S", "O": "O"}.get(r.get("support_oppose_indicator"))
+                    if bg and kind:
+                        m = money.setdefault((cid, bg, kind), [0.0, 0]); m[0] += r.get("expenditure_amount") or 0; m[1] += 1
                 li = (j.get("pagination") or {}).get("last_indexes")
                 if not res or not li: break
-                last = {k2: v for k2, v in li.items() if v is not None}
-        last = {}
-        while True:                                       # regular reports only (not the 24- and 48-hour notices, which repeat them)
-            j = call("/schedules/schedule_e/", committee_id=cid, cycle=cyc, is_notice="false", per_page=100, sort="expenditure_date", **last)
-            res = j.get("results") or []
-            for r in res:
-                if (r.get("memo_code") or "").upper() == "X": continue
-                bg, kind = cand.get(r.get("candidate_id")), {"S": "S", "O": "O"}.get(r.get("support_oppose_indicator"))
-                if bg and kind:
-                    m = money.setdefault((cid, bg, kind), [0.0, 0]); m[0] += r.get("expenditure_amount") or 0; m[1] += 1
-            li = (j.get("pagination") or {}).get("last_indexes")
-            if not res or not li: break
-            last = {k: v for k, v in li.items() if v is not None}
+                st["m_last"] = {k: v for k, v in li.items() if v is not None}
+            st["m_next"], st["m_k"], st["m_last"], st["m_part"] = st["m_next"] + 1, 0, {}, "b"
+    except fp.Pause as e:
+        st["money"] = [[*k, *v] for k, v in money.items()]
+        fp.save(name, st)
+        print(f"paused ({e}) after {rd.calls} requests: words {st['w_next']} of {len(st['words'])}, committees {st['m_next']} of {len(st.get('listed', []))}; "
+              f"the next run carries on (read started {st['started']}, run {st['runs']}). The page keeps the last complete read.", file=sys.stderr)
+        return
     gave = {cid for (cid, _, _), v in money.items() if v[0] > 0}                # G, E, S or O
     rows = [found[c] for c in sorted(found, key=lambda c: (found[c]["country"], found[c]["name"])) if c in gave]
     with open(REF / "country_pacs.csv", "w", newline="", encoding="utf-8") as f:
@@ -160,7 +172,8 @@ def main():
         w = csv.writer(f, delimiter="|", lineterminator="\n"); w.writerow(["committee_id", "bioguide", "kind", "usd", "count"])
         for (cid, bg, kind), (usd, n) in sorted(money.items()):
             if usd > 0: w.writerow([cid, bg, kind, round(usd), n])
-    (REF / "country_pacs_meta.json").write_text(json.dumps({"read": str(today), "cycle": cyc, "matched": len(found), "with_money": len(rows)}, indent=1), encoding="utf-8")
+    (REF / "country_pacs_meta.json").write_text(json.dumps({"read": str(today), "cycle": cyc, "matched": len(found), "with_money": len(rows), "read_started": st["started"]}, indent=1), encoding="utf-8")
+    fp.clear(name)
     print(f"{len(rows)} of {len(found)} committees gave to or spent on current members", file=sys.stderr)
 
 

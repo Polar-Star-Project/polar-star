@@ -14,7 +14,7 @@ Reads data/reference/members.csv and member_committees.csv (from member_committe
 Writes data/reference/member_top_donors.csv ("|" separated): bioguide | kind (G gave, S supported, O opposed) | committee_id |
 name | usd | count, the twenty largest of each kind per member (a tie at twentieth place is shown in full when that keeps the list
 at thirty or fewer, otherwise as one row of kind TG/TS/TO giving the tied amount and how many committees share it), and member_top_donors_meta.json. Organizations only: individual
-donors to members are not read. Without a key it stops and changes nothing.
+donors to members are not read. Without a key it stops and changes nothing. Reads in pieces across weekly runs (fec_pace.py).
 """
 import csv, datetime as dt, json, os, sys, time, urllib.parse, urllib.request
 from pathlib import Path
@@ -52,55 +52,63 @@ def add(groups, bg, kind, cid, name, usd, cnt=1):
 
 
 def main():
+    """Reads at a steady pace and in pieces (fec_pace.py): when this run's time is up, or the FEC asks to slow down, it saves
+    where it got to and the next weekly run carries on. The files are replaced only when a full read is finished."""
+    import fec_pace as fp
     key = os.environ.get("FEC_API_KEY", "").strip()
     if not key: print("FEC_API_KEY is not set: top donors were left as they were."); return
-    def call(path, **q):
-        url = f"{API}{path}?" + urllib.parse.urlencode(dict(q, api_key=key), doseq=True)
-        for i in range(60):                                 # 1,000 calls an hour: on "too many", wait out the hour
-            try:
-                with urllib.request.urlopen(url, timeout=120) as r: time.sleep(0.6); return json.loads(r.read().decode("utf-8"))
-            except Exception as e:
-                err = str(e)[:120] + (" " + e.read().decode("utf-8", "replace")[:300] if hasattr(e, "read") else "")
-                if "429" not in err and (i >= 6 or "422" in err): break
-                time.sleep(120 if "429" in err else 8)
-        raise SystemExit(f"FEC did not answer {path}: {err}. Nothing written.")
+    rd, name = fp.Reader(key), "member_top_donors"
     cyc = cycle(dt.date.today())
-    cur = {r["bioguide"] for r in csv.DictReader(open(REF / "members.csv", encoding="utf-8"), delimiter="|") if r["current"]}
-    own = {}
-    for r in csv.DictReader(open(REF / "member_committees.csv", encoding="utf-8"), delimiter="|"):
-        if r["bioguide"] in cur and r["designation"] in ("P", "A"): own[r["committee_id"]] = r["bioguide"]
-    groups, rows_read = {}, 0
-    ids = sorted(own)
-    for i in range(0, len(ids), 10):                        # ten committees per request (the API caps list filters); keyset paging through every 11C line
-        chunk, last = ids[i:i + 10], {}
-        while True:
-            j = call("/schedules/schedule_a/", committee_id=chunk, two_year_transaction_period=cyc, line_number="F3-11C", per_page=100, sort="contribution_receipt_date", **last)
-            res = j.get("results") or []
-            for r in res:
-                if (r.get("memo_code") or "").upper() == "X": continue
-                bg = own.get(r.get("committee_id"))
-                if bg: add(groups, bg, "G", r.get("contributor_id") or r.get("contributor_name") or "", r.get("contributor_name") or "", r.get("contribution_receipt_amount"))
-            rows_read += len(res); li = (j.get("pagination") or {}).get("last_indexes")
-            if not res or not li: break
-            last = {k: v for k, v in li.items() if v is not None}
-        print(f"gave: {i + len(chunk)} of {len(ids)} committees, {rows_read} lines", file=sys.stderr)
-    legs = {l["id"]["bioguide"]: l for f in ("legislators-current.json",) for l in json.load(urllib.request.urlopen(SRC + f))}
-    cand = {c: bg for bg in cur for c in (legs.get(bg) or {}).get("id", {}).get("fec", [])}
-    cids = sorted(cand)
-    for i in range(0, len(cids), 10):
-        page = 1
-        while True:
-            j = call("/schedules/schedule_e/by_candidate/", candidate_id=cids[i:i + 10], cycle=cyc, per_page=100, page=page)
-            for r in j.get("results") or []:
-                bg = cand.get(r.get("candidate_id")); kind = {"S": "S", "O": "O"}.get(r.get("support_oppose_indicator"))
-                if bg and kind: add(groups, bg, kind, r.get("committee_id") or "", r.get("committee_name") or "", r.get("total"), r.get("count") or 0)
-            if page >= (j.get("pagination") or {}).get("pages", 1): break
-            page += 1
+    st = fp.load(name, cyc)
+    if "ids" not in st:                                     # the committee and candidate lists are fixed when a read starts
+        cur = {r["bioguide"] for r in csv.DictReader(open(REF / "members.csv", encoding="utf-8"), delimiter="|") if r["current"]}
+        own = {}
+        for r in csv.DictReader(open(REF / "member_committees.csv", encoding="utf-8"), delimiter="|"):
+            if r["bioguide"] in cur and r["designation"] in ("P", "A"): own[r["committee_id"]] = r["bioguide"]
+        legs = {l["id"]["bioguide"]: l for l in json.load(urllib.request.urlopen(SRC + "legislators-current.json", timeout=120))}
+        cand = {c: bg for bg in cur for c in (legs.get(bg) or {}).get("id", {}).get("fec", [])}
+        st.update(own=own, cand=cand, ids=sorted(own), cids=sorted(cand), gave_next=0, gave_last={}, spent_next=0, spent_page=1, rows_read=0, groups=[])
+    own, cand, ids, cids = st["own"], st["cand"], st["ids"], st["cids"]
+    groups = {(g[0], g[1], g[2]): [g[3], g[4], g[5]] for g in st["groups"]}
+    try:
+        while st["gave_next"] < len(ids):                   # ten committees per request (the API caps list filters); keyset paging through every 11C line
+            i = st["gave_next"]; chunk = ids[i:i + 10]
+            while True:
+                j = rd.call("/schedules/schedule_a/", committee_id=chunk, two_year_transaction_period=cyc, line_number="F3-11C", per_page=100, sort="contribution_receipt_date", **st["gave_last"])
+                res = j.get("results") or []
+                for r in res:
+                    if (r.get("memo_code") or "").upper() == "X": continue
+                    bg = own.get(r.get("committee_id"))
+                    if bg: add(groups, bg, "G", r.get("contributor_id") or r.get("contributor_name") or "", r.get("contributor_name") or "", r.get("contribution_receipt_amount"))
+                st["rows_read"] += len(res); li = (j.get("pagination") or {}).get("last_indexes")
+                if not res or not li: break
+                st["gave_last"] = {k: v for k, v in li.items() if v is not None}       # saved with the totals so far, so a pause never counts a page twice
+            st["gave_next"], st["gave_last"] = i + len(chunk), {}
+            print(f"gave: {st['gave_next']} of {len(ids)} committees, {st['rows_read']} lines", file=sys.stderr)
+        while st["spent_next"] < len(cids):
+            i = st["spent_next"]
+            while True:
+                j = rd.call("/schedules/schedule_e/by_candidate/", candidate_id=cids[i:i + 10], cycle=cyc, per_page=100, page=st["spent_page"])
+                for r in j.get("results") or []:
+                    bg = cand.get(r.get("candidate_id")); kind = {"S": "S", "O": "O"}.get(r.get("support_oppose_indicator"))
+                    if bg and kind: add(groups, bg, kind, r.get("committee_id") or "", r.get("committee_name") or "", r.get("total"), r.get("count") or 0)
+                if st["spent_page"] >= (j.get("pagination") or {}).get("pages", 1): break
+                st["spent_page"] += 1
+            st["spent_next"], st["spent_page"] = i + 10, 1
+    except fp.Pause as e:
+        st["groups"] = [[*k, *v] for k, v in groups.items()]
+        fp.save(name, st)
+        print(f"paused ({e}) after {rd.calls} requests: committees {st['gave_next']} of {len(ids)}, candidates {min(st['spent_next'], len(cids))} of {len(cids)}; "
+              f"the next run carries on (read started {st['started']}, run {st['runs']}). The page keeps the last complete read.", file=sys.stderr)
+        return
     rows = top(groups)
-    if len({r["bioguide"] for r in rows if r["kind"] == "G"}) < 300: raise SystemExit(f"Implausible: PAC donors for only {len({r['bioguide'] for r in rows if r['kind'] == 'G'})} members. Nothing written.")
+    if len({r["bioguide"] for r in rows if r["kind"] == "G"}) < 300:
+        fp.clear(name); raise SystemExit(f"Implausible: PAC donors for only {len({r['bioguide'] for r in rows if r['kind'] == 'G'})} members. Nothing written; the next run starts over.")
     with open(REF / "member_top_donors.csv", "w", newline="", encoding="utf-8") as f:
         w = csv.DictWriter(f, fieldnames=["bioguide", "kind", "committee_id", "name", "usd", "count"], delimiter="|", lineterminator="\n"); w.writeheader(); w.writerows(rows)
-    (REF / "member_top_donors_meta.json").write_text(json.dumps({"read": str(dt.date.today()), "cycle": cyc, "lines_read": rows_read}, indent=1), encoding="utf-8")
+    (REF / "member_top_donors_meta.json").write_text(json.dumps({"read": str(dt.date.today()), "cycle": cyc, "lines_read": st["rows_read"], "read_started": st["started"],
+                                                                 "runs": st.get("runs", 0) + 1}, indent=1), encoding="utf-8")
+    fp.clear(name)
     print(f"{len(rows)} rows for {len({r['bioguide'] for r in rows})} members", file=sys.stderr)
 
 
