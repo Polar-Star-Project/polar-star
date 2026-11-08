@@ -1,0 +1,13 @@
+date,registration,hex,aircraft_type,callsign,departed_utc,arrived_utc,origin,origin_country,origin_certain,dest,dest_country,dest_certain,kind,basis
+2026-11-06,N771KW,aa6db4,B772,EAL8270,08:26,09:49,ELP,US,True,AEX,US,False,domestic,"contractor aircraft; day includes AEX (Alexandria, LA)"
+2026-11-06,N771KW,aa6db4,B772,EAL8271,13:32,17:23,AEX,US,True,MDE,CO,False,international,"contractor aircraft; day includes AEX (Alexandria, LA)"
+2026-11-06,N507VL,a655d7,A320,UX41,00:00,00:12,MAM,MX,False,HRL,US,True,international,"contractor aircraft; day includes HRL (Harlingen, TX)"
+2026-11-06,N507VL,a655d7,A320,GXA6141,16:33,17:18,HRL,US,True,IAH,US,True,domestic,"contractor aircraft; day includes HRL (Harlingen, TX)"
+2026-11-06,N507VL,a655d7,A320,NASH41,18:46,19:17,IAH,US,True,AEX,US,True,domestic,"contractor aircraft; day includes HRL (Harlingen, TX)"
+2026-11-06,N507VL,a655d7,A320,UX41,20:30,21:13,AEX,US,True,HUM,US,False,domestic,"contractor aircraft; day includes HRL (Harlingen, TX)"
+2026-11-06,N278GX,a2c4e0,A320,NASH45,03:16,04:45,DEN,US,True,AZA,US,True,domestic,"contractor aircraft; day includes AZA (Mesa, AZ)"
+2026-11-06,N278GX,a2c4e0,A320,GXA6211,18:10,19:06,AZA,US,True,VCV,US,True,domestic,"contractor aircraft; day includes AZA (Mesa, AZ)"
+2026-11-06,N278GX,a2c4e0,A320,GXA6212,23:14,23:59,VCV,US,True,GYR,US,False,domestic,"contractor aircraft; day includes AZA (Mesa, AZ)"
+2026-11-06,N628VA,a835d1,A320,NASH24,01:37,03:37,TGZ,MX,False,AEX,US,True,international,"contractor aircraft; day includes AEX (Alexandria, LA)"
+2026-11-06,N628VA,a835d1,A320,NASH23,16:04,17:47,AEX,US,True,MMC,MX,False,international,"contractor aircraft; day includes AEX (Alexandria, LA)"
+2026-11-06,N628VA,a835d1,A320,GXAH23,20:15,22:15,NLU,MX,False,AEX,US,True,international,"contractor aircraft; day includes AEX (Alexandria, LA)"

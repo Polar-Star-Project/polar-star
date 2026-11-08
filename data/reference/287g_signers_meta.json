@@ -1,8 +1,8 @@
 {
- "read": "2026-11-02",
- "agreements": 1557,
- "named": 268,
+ "read": "2026-11-08",
+ "agreements": 1554,
+ "named": 267,
  "contacts": 590,
  "parser": 2,
- "commit": "f0f19fcab8586995514ea04e69983d33bb5c1200"
+ "commit": "660f8f8ea412a94ca9a1fb2c6809225e64bc7367"
 }

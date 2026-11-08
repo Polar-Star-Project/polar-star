@@ -1,0 +1,3 @@
+date,registration,hex,aircraft_type,callsign,departed_utc,arrived_utc,origin,origin_country,origin_certain,dest,dest_country,dest_certain,kind,basis
+2026-11-03,N771KW,aa6db4,B772,EAL8260,14:13,15:34,ELP,US,True,HRL,US,True,domestic,"contractor aircraft; day includes HRL (Harlingen, TX)"
+2026-11-03,N771KW,aa6db4,B772,EAL8261,18:34,19:37,HRL,US,False,NLU,MX,False,international,"contractor aircraft; day includes HRL (Harlingen, TX)"

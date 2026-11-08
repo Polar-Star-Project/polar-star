@@ -1,0 +1,4 @@
+date,registration,hex,aircraft_type,callsign,departed_utc,arrived_utc,origin,origin_country,origin_certain,dest,dest_country,dest_certain,kind,basis
+2026-11-02,N289GX,a2f016,A320,GXAUX21,13:47,14:50,AEX,US,True,LSF,US,True,domestic,"contractor aircraft; day includes AEX (Alexandria, LA)"
+2026-11-02,N289GX,a2f016,A320,GXAH21,16:46,18:34,LSF,US,True,HRL,US,False,domestic,"contractor aircraft; day includes AEX (Alexandria, LA)"
+2026-11-02,N289GX,a2f016,A320,NASH21,19:54,20:47,HRL,US,True,POE,US,False,domestic,"contractor aircraft; day includes AEX (Alexandria, LA)"
