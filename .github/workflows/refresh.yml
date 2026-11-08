@@ -1,4 +1,5 @@
-# Weekly: fetch new data in two groups side by side (main, money), then test, rebuild the page and save it.
+# Weekly: fetch new data in two groups side by side (main, money) on the publisher's self-hosted runners, then test,
+# rebuild the page and save it on GitHub.
 # publish.yml then mirrors the result to the public repository, where pages.yml publishes the page.
 # Also runs when started by hand (Actions tab > Refresh and publish > Run workflow).
 name: Refresh and publish
@@ -25,7 +26,7 @@ jobs:
   main:
     # Every collector except the FEC and lobbying ones.
     if: github.repository == 'Polar-Star-Project/polar-star-development'
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, polar-star]     # self-hosted runners (Docker on the publisher's PC): these long jobs use no billed minutes
     timeout-minutes: 340
     env:
       GROUP: main
@@ -37,8 +38,7 @@ jobs:
           python-version: "3.12"
           cache: pip
       - run: pip install -r requirements.txt
-      - run: python -m playwright install --with-deps chromium
-      - run: sudo apt-get install -y tesseract-ocr poppler-utils
+      - run: python -m playwright install chromium          # its system libraries, tesseract and poppler are in the runner image
       - name: Refresh (main group)
         # Each step has its own time limit (refresh_all.py); this is a backstop for the group. The record of each step
         # is saved as it finishes, so a group cut off here still shows how far it got.
@@ -67,7 +67,7 @@ jobs:
   money:
     # The FEC and lobbying collectors: slow, because those APIs limit requests per minute and hour.
     if: github.repository == 'Polar-Star-Project/polar-star-development'
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, polar-star]     # self-hosted runners (Docker on the publisher's PC): these long jobs use no billed minutes
     timeout-minutes: 340
     env:
       GROUP: money
@@ -79,7 +79,7 @@ jobs:
           python-version: "3.12"
           cache: pip
       - run: pip install -r requirements.txt
-      - run: python -m playwright install --with-deps chromium      # sec_watch reads one page in a browser
+      - run: python -m playwright install chromium      # sec_watch reads one page in a browser; its system libraries are in the runner image
       - name: Refresh (money group)
         # Each step has its own time limit (refresh_all.py); this is a backstop for the group. The record of each step
         # is saved as it finishes, so a group cut off here still shows how far it got.
