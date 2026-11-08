@@ -149,6 +149,23 @@ def test_governor_change_needs_a_terms_line(tmp):
     assert governor_changes(tmp, {"NJ": "Mikie J. Sherrill", "VA": "Glenn A. Youngkin Jr."}, {}) == []     # a middle initial or suffix is the same person
 
 
+
+def test_governor_change_writes_the_terms_line_itself(tmp):
+    from build_site import governor_changes
+    (tmp / "governors_known.csv").write_text("state|name|party|start\nIA|Kim Reynolds|R|2017-05-24\nCO|Jared Polis|D|\n", encoding="utf-8")
+    (tmp / "governor_terms.csv").write_text("name|party|start|end|source\n", encoding="utf-8")
+    rows = {"IA": {"name": "Rob Sand", "party": "D", "start": "2027-01-15", "site": "http://governor.iowa.gov/"},
+            "CO": {"name": "Phil Weiser", "party": "D", "start": "2027-01-12", "site": "https://www.colorado.gov/governor/"}}
+    try: governor_changes(tmp, {"IA": "Rob Sand", "CO": "Phil Weiser"}, {}, rows); assert False      # CO: the outgoing start is unknown, so by hand
+    except ValueError as e: assert "CO: Jared Polis -> Phil Weiser" in str(e) and "IA" not in str(e)
+    terms = {"CO": [["Jared Polis", "D", "2019-01-08", "2027-01-12"]]}
+    assert governor_changes(tmp, {"IA": "Rob Sand", "CO": "Phil Weiser"}, terms, rows) == [("CO", "Jared Polis", "Phil Weiser"), ("IA", "Kim Reynolds", "Rob Sand")]
+    assert "Kim Reynolds|R|2017-05-24|2027-01-15|https://governor.iowa.gov/" in (tmp / "governor_terms.csv").read_text(encoding="utf-8")
+    assert terms["IA"] == [["Kim Reynolds", "R", "2017-05-24", "2027-01-15"]]
+    k = (tmp / "governors_known.csv").read_text(encoding="utf-8")
+    assert "IA|Rob Sand|D|2027-01-15" in k and "CO|Phil Weiser|D|2027-01-12" in k
+    assert governor_changes(tmp, {"IA": "Rob Sand", "CO": "Phil Weiser"}, terms, rows) == []
+
 def test_disputes_reach_the_feed(tmp):
     import watch
     (tmp / "site").mkdir(); (tmp / "site" / "watch.xml").write_text('<feed xmlns="http://www.w3.org/2005/Atom">\n<title>x</title>\n</feed>\n', encoding="utf-8")

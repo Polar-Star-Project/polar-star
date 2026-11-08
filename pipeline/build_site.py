@@ -1883,22 +1883,44 @@ def people_index(site, states):
         if not one or len(sts - {"", "US"}) > 1: e["x"] = 1   # joined across other lists by first and last name only: may be different people
     return {"p": out, "nk": nk}
 
-def governor_changes(ref, current, terms):
+def governor_changes(ref, current, terms, rows=None):
     """The weekly check found a different governor in a state: the outgoing one must be in governor_terms.csv, or every
-    older dispute in that state would silently lose its "Governor at the time". Raises until the line is added; once it
-    is, governors_known.csv is brought up to date so the next build is clean."""
+    older dispute in that state would silently lose its "Governor at the time". When governors_known.csv holds the outgoing
+    governor's party and start, and governors.csv the new governor's start and official site, the line is added here
+    (start, end = the new term's start, source = the governor's official site, which named the new governor); otherwise
+    the build stops until the line is added by hand. Then governors_known.csv is brought up to date.
+    current: {state: name}, only governors whose official site names them; rows: {state: governors.csv row}."""
     f = Path(ref) / "governors_known.csv"
     if not f.exists() or not current: return []
-    known = {r["state"]: r["name"] for r in csv.DictReader(open(f, encoding="utf-8"), delimiter="|")}
+    rows = rows or {}
+    kr = {r["state"]: r for r in csv.DictReader(open(f, encoding="utf-8"), delimiter="|")}
+    known = {st: r["name"] for st, r in kr.items()}
     def same(a, b):        # "Mike Dunleavy" / "Mike J. Dunleavy", "Dan McKee" / "Daniel McKee": one person (same last name and first initial)
         w = lambda x: [t for t in re.sub(r"[^a-z ]+", " ", (x or "").lower()).split() if t not in ("jr", "sr", "ii", "iii", "iv")]
         a, b = w(a), w(b)
         return bool(a and b) and a[-1] == b[-1] and a[0][0] == b[0][0]
     changed = [(st, known[st], nm) for st, nm in sorted(current.items()) if st in known and not same(known[st], nm)]
-    missing = [f"{st}: {old} -> {new}" for st, old, new in changed if not any(t[0] == old for t in terms.get(st, []))]
+    auto, missing = [], []
+    for st, old, new in changed:
+        if any(t[0] == old for t in terms.get(st, [])): continue
+        k, n = kr.get(st, {}), rows.get(st, {})
+        start, end, src = k.get("start") or "", n.get("start") or "", re.sub(r"^http://", "https://", n.get("site") or "")
+        if start and end and start < end and src.startswith("https://"): auto.append([st, old, k.get("party") or "", start, end, src])
+        else: missing.append(f"{st}: {old} -> {new}")
     if missing: raise ValueError("A governor changed and governor_terms.csv has no line for the one who left (name|party|start|end|source): " + "; ".join(missing))
-    if changed or set(current) - set(known):
-        f.write_text("state|name\n" + "".join(f"{st}|{nm}\n" for st, nm in sorted({**known, **current}.items())), encoding="utf-8")
+    if auto:
+        tf = Path(ref) / "governor_terms.csv"
+        with open(tf, "a", encoding="utf-8") as fh:
+            for a in auto: fh.write("|".join(a) + "\n"); terms.setdefault(a[0], []).append([a[1], a[2], a[3], a[4]])
+    keep = {st: {"name": r["name"], "party": r.get("party") or "", "start": r.get("start") or ""} for st, r in kr.items()}
+    for st, nm in current.items():
+        if st not in keep or not same(keep[st]["name"], nm):
+            n = rows.get(st, {}); keep[st] = {"name": nm, "party": n.get("party") or "", "start": n.get("start") or ""}
+    for st, v in keep.items():           # fill a missing party or start from the weekly read, when it is the same person
+        n = rows.get(st, {})
+        if same(v["name"], n.get("name")): v["party"], v["start"] = v["party"] or n.get("party") or "", v["start"] or n.get("start") or ""
+    new_text = "state|name|party|start\n" + "".join(f"{st}|{v['name']}|{v['party']}|{v['start']}\n" for st, v in sorted(keep.items()))
+    if new_text != f.read_text(encoding="utf-8"): f.write_text(new_text, encoding="utf-8")
     return changed
 
 def state_population(ref):
@@ -2291,7 +2313,8 @@ def main():
     site["social"] = social_list(ref)
     site["family_orgs"] = family_orgs(ref, site["social"], today)
     site["disputes"] = disputes_list(ref, site["facilities"]); site["gov_terms"] = governor_terms(ref)
-    for st, old, new in governor_changes(ref, {r["state"]: r["name"] for r in rd_pipe(ref / "governors.csv")} if (ref / "governors.csv").exists() else {}, site["gov_terms"]): print(f"GOVERNOR CHANGE recorded: {st} {old} -> {new}")
+    gv = rd_pipe(ref / "governors.csv")       # a change counts only when the governor's own official site names them; party and start come from every row
+    for st, old, new in governor_changes(ref, {r["state"]: r["name"] for r in gv if r.get("ok", "1") == "1"}, site["gov_terms"], {r["state"]: r for r in gv}): print(f"GOVERNOR CHANGE recorded: {st} {old} -> {new}")
     if (ref / "federal_law_sponsors.csv").exists():                  # who sponsored the enforcement laws on Politicians; by hand, from congress.gov
         fs = list(csv.DictReader(open(ref / "federal_law_sponsors.csv", encoding="utf-8"), delimiter="|"))
         laws = {v[4] for v in (site.get("pol") or {}).get("votes", [])}

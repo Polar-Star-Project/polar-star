@@ -1,51 +1,51 @@
-state|name
-AK|Mike Dunleavy
-AL|Kay Ivey
-AR|Sarah Huckabee Sanders
-AZ|Katie Hobbs
-CA|Gavin Newsom
-CO|Jared Polis
-CT|Ned Lamont
-DE|Matt Meyer
-FL|Ron DeSantis
-GA|Brian Kemp
-HI|Josh Green
-IA|Kim Reynolds
-ID|Brad Little
-IL|JB Pritzker
-IN|Mike Braun
-KS|Laura Kelly
-KY|Andy Beshear
-LA|Jeff Landry
-MA|Maura Healey
-MD|Wes Moore
-ME|Janet Mills
-MI|Gretchen Whitmer
-MN|Tim Walz
-MO|Mike Kehoe
-MS|Tate Reeves
-MT|Greg Gianforte
-NC|Josh Stein
-ND|Kelly Armstrong
-NE|Jim Pillen
-NH|Kelly Ayotte
-NJ|Mikie Sherrill
-NM|Michelle Lujan Grisham
-NV|Joe Lombardo
-NY|Kathy Hochul
-OH|Mike DeWine
-OK|Kevin Stitt
-OR|Tina Kotek
-PA|Josh Shapiro
-RI|Dan McKee
-SC|Henry McMaster
-SD|Larry Rhoden
-TN|Bill Lee
-TX|Greg Abbott
-UT|Spencer Cox
-VA|Abigail Spanberger
-VT|Phil Scott
-WA|Bob Ferguson
-WI|Tony Evers
-WV|Patrick Morrisey
-WY|Mark Gordon
+state|name|party|start
+AK|Mike J. Dunleavy|R|2018-12-03
+AL|Kay Ivey|R|2017-04-10
+AR|Sarah Huckabee Sanders|R|2023-01-10
+AZ|Katie Hobbs|D|2023-01-02
+CA|Gavin Newsom|D|2019-01-07
+CO|Jared Polis|D|2019-01-08
+CT|Ned Lamont|D|2019-01-09
+DE|Matt Meyer|D|2025-01-21
+FL|Ron DeSantis|R|2019-01-08
+GA|Brian Kemp|R|2019-01-14
+HI|Josh Green|D|2022-12-05
+IA|Kim Reynolds|R|2017-05-24
+ID|Brad Little|R|2019-01-07
+IL|JB Pritzker|D|2019-01-14
+IN|Mike Braun|R|2025-01-13
+KS|Laura Kelly|D|2019-01-14
+KY|Andy Beshear|D|2019-12-10
+LA|Jeff Landry|R|2024-01-08
+MA|Maura Healey|D|2023-01-05
+MD|Wes Moore|D|2023-01-18
+ME|Janet T. Mills|D|2019-01-02
+MI|Gretchen Whitmer|D|2019-01-01
+MN|Tim Walz|D|2019-01-07
+MO|Mike Kehoe|R|2025-01-13
+MS|Tate Reeves|R|2020-01-14
+MT|Greg Gianforte|R|2021-01-04
+NC|Josh Stein|D|2025-01-01
+ND|Kelly M. Armstrong|R|2024-12-15
+NE|Jim Pillen|R|2023-01-05
+NH|Kelly Ayotte|R|2025-01-09
+NJ|Mikie Sherrill|D|2026-01-20
+NM|Michelle Lujan Grisham|D|2019-01-01
+NV|Joe Lombardo|R|2023-01-02
+NY|Kathy Hochul|D|2021-08-24
+OH|Mike DeWine|R|2019-01-14
+OK|Kevin Stitt|R|2019-01-14
+OR|Tina Kotek|D|2023-01-09
+PA|Josh Shapiro|D|2023-01-17
+RI|Dan McKee|D|2021-03-02
+SC|Henry McMaster|R|2017-01-24
+SD|Larry Rhoden|R|2025-01-25
+TN|Bill Lee|R|2019-01-19
+TX|Greg Abbott|R|2015-01-20
+UT|Spencer Cox|R|2021-01-04
+VA|Abigail Spanberger|D|2026-01-17
+VT|Phil Scott|R|2017-01-05
+WA|Bob Ferguson|D|2025-01-15
+WI|Tony Evers|D|2019-01-07
+WV|Patrick Morrisey|R|2025-01-13
+WY|Mark Gordon|R|2019-01-07

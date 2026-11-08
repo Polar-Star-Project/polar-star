@@ -66,12 +66,16 @@ def wikidata(query):
     return None
 
 
-def governors(get_json=None):
-    """One row per state with exactly one current governor in Wikidata, or none for that state."""
+def governors(get_json=None, today=None):
+    """One row per state with exactly one current governor in Wikidata, or none for that state. A governor-elect (the term's
+    start date is still ahead, as after a November election) and a person with no English name in Wikidata (the label comes
+    back as a bare id such as Q27986907) are not taken."""
+    today = str(today or dt.date.today())
     j = (get_json or (lambda q: wikidata(q)))(SPARQL)
     by = {}
     for b in (j or {}).get("results", {}).get("bindings", []):
         v = {k: x["value"] for k, x in b.items()}
+        if v.get("start", "")[:10] > today or re.fullmatch(r"Q\d+", v.get("personLabel", "").strip() or "Q0"): continue
         st = v["iso"].split("-")[-1]
         g = by.setdefault(st, {})
         g.setdefault(v["person"], {"state": st, "name": v.get("personLabel", ""), "start": v.get("start", "")[:10], "parties": set(), "site": v.get("site", "")})

@@ -37,6 +37,14 @@ def test_governors_one_per_state():
     assert [(r["state"], r["name"], r["party"], r["start"]) for r in g] == [("AA", "Pat One", "R", "2023-01-02"), ("CC", "Kim Four", "", "2023-01-02"), ("DD", "New Six", "", "2023-01-09")]   # BB: two holders with the same start, skipped; DD: the later start
 
 
+
+def test_governors_skip_the_elect_and_unnamed():
+    b = lambda iso, p, name, start: {"iso": {"value": iso}, "person": {"value": p}, "personLabel": {"value": name}, "start": {"value": start}, "site": {"value": "https://gov.example"}}
+    j = {"results": {"bindings": [b("US-IA", "q1", "Kim Reynolds", "2017-05-24T00:00:00Z"), b("US-IA", "q2", "Rob Sand", "2027-01-15T00:00:00Z"),
+                                  b("US-AR", "q3", "Sarah Huckabee Sanders", "2023-01-10T00:00:00Z"), b("US-AR", "Q27986907", "Q27986907", "2023-01-10T00:00:00Z")]}}
+    assert [(r["state"], r["name"]) for r in oc.governors(lambda q: j, today="2026-11-08")] == [("AR", "Sarah Huckabee Sanders"), ("IA", "Kim Reynolds")]
+    assert [(r["state"], r["name"]) for r in oc.governors(lambda q: j, today="2027-01-20")] == [("AR", "Sarah Huckabee Sanders"), ("IA", "Rob Sand")]
+
 def test_agreement_links_match_agency_and_model():
     ag = [{"state": "TEXAS", "agency": "Goliad County Sheriff’s Office", "model": "Jail Enforcement Model"},
           {"state": "TEXAS", "agency": "Goliad County Sheriff's Office", "model": "Task Force Model"},
