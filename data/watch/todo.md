@@ -1,13 +1,12 @@
 # Weekly to-do, 2026-11-08
 
-33 items. Nothing here changes the page by itself.
+38 items. Nothing here changes the page by itself.
 
-## Refresh steps that failed (5)
+## Refresh steps that failed (4)
 
-- `awards`: timed out —   opened 600 of 1162 awards (16 to retry) /   opened 700 of 1162 awards (16 to retry) /   opened 800 of 1162 awards (16 to retry) /   opened 900 of 1162 awards (16 to retry) /   opened 1000 of 1162 awards (16 to retry) /   opened 1100 of 1162 awards (21 to retry) / stopped after 40 minutes
-- `build`: failed — ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ / ValueError: A governor changed and governor_terms.csv has no line for the one who left (name|party|start|end|source): AR: Sarah Huckabee Sanders -> Q27986907; CO: Jared Polis -> Phil Weiser; IA: Kim Reynolds -> Rob Sand
-- `fara`: timed out — 0 of 538 registrants / 100 of 538 registrants / 200 of 538 registrants / 300 of 538 registrants / stopped after 40 minutes
-- `statements`: timed out —   25 of 539 members, 0 new statements so far /   50 of 539 members, 0 new statements so far /   75 of 539 members, 0 new statements so far /   100 of 539 members, 0 new statements so far /   125 of 539 members, 0 new statements so far / stopped after 40 minutes
+- `awards`: timed out —   opened 600 of 1162 awards (0 to retry) /   opened 700 of 1162 awards (0 to retry) /   opened 800 of 1162 awards (0 to retry) /   opened 900 of 1162 awards (16 to retry) /   opened 1000 of 1162 awards (16 to retry) /   opened 1100 of 1162 awards (16 to retry) / stopped after 40 minutes
+- `fara`: timed out — 0 of 538 registrants / 100 of 538 registrants / 200 of 538 registrants / stopped after 40 minutes
+- `statements`: timed out — 39 members, 0 new statements so far /   50 of 539 members, 0 new statements so far /   75 of 539 members, 0 new statements so far /   100 of 539 members, 0 new statements so far /   125 of 539 members, 0 new statements so far /   150 of 539 members, 0 new statements so far / stopped after 40 minutes
 - `vendorlobby`: timed out — stopped after 40 minutes
 
 ## Disputes whose docket has filings the weekly step could not read yet (no docket text on CourtListener; they are retried each week) (6)
@@ -39,10 +38,16 @@
 - `gt`: no source page could be reached
 - `sv`: no source page could be reached
 
-## Organizations hidden on the Organizations tab (fix the row in family_orgs.csv, or remove it) (2)
+## Organizations hidden on the Organizations tab (fix the row in family_orgs.csv, or remove it) (8)
 
+- Church World Service: the phone is no longer on the page named
 - Interfaith Immigration Coalition: fetch failed: website unreachable
+- Ethiopian Community Development Council (ECDC): the phone is no longer on the page named
+- Florence Immigrant & Refugee Rights Project: the phone is no longer on the page named
+- Kino Border Initiative: the phone is no longer on the page named
+- Florida Immigrant Coalition (FLIC): the phone is no longer on the page named
 - Make the Road New Jersey: no IRS record or other identity on file
+- New Sanctuary Movement of Philadelphia (Community Fund for Bond and Legal Support): the phone is no longer on the page named
 
 ## Sources older than they should be (6)
 
