@@ -1,19 +1,15 @@
 # Weekly to-do, 2026-11-09
 
-38 items. Nothing here changes the page by itself.
+26 items. Nothing here changes the page by itself.
 
-## Refresh steps that failed (4)
+## Refresh steps that failed (1)
 
-- `awards`: timed out —   opened 600 of 1162 awards (0 to retry) /   opened 700 of 1162 awards (0 to retry) /   opened 800 of 1162 awards (0 to retry) /   opened 900 of 1162 awards (16 to retry) /   opened 1000 of 1162 awards (16 to retry) /   opened 1100 of 1162 awards (16 to retry) / stopped after 40 minutes
-- `fara`: timed out — 0 of 538 registrants / 100 of 538 registrants / 200 of 538 registrants / stopped after 40 minutes
-- `statements`: timed out — 39 members, 0 new statements so far /   50 of 539 members, 0 new statements so far /   75 of 539 members, 0 new statements so far /   100 of 539 members, 0 new statements so far /   125 of 539 members, 0 new statements so far /   150 of 539 members, 0 new statements so far / stopped after 40 minutes
-- `vendorlobby`: timed out — stopped after 40 minutes
+- `memos`: failed —  492, in _call_chain /     result = func(*args) /              ^^^^^^^^^^^ /   File "/opt/hostedtoolcache/Python/3.12.16/x64/lib/python3.12/urllib/request.py", line 639, in http_error_default /     raise HTTPError(req.full_url, code, msg, hdrs, fp) / urllib.error.HTTPError: HTTP Error 403: Forbidden
 
-## Disputes whose docket has filings the weekly step could not read yet (no docket text on CourtListener; they are retried each week) (6)
+## Disputes whose docket has filings the weekly step could not read yet (no docket text on CourtListener; they are retried each week) (5)
 
 - `ca-2025-07-medicaid`: status on file 2026-03-27, docket's newest filing 2026-11-05 — [docket](https://www.courtlistener.com/docket/70687026/state-of-california-v-us-department-of-health-and-human-services/)<br>newest entry 2026-11-05: MOTION to Clarify Preliminary Injunction and for Case Schedule filed by Robert F. Kennedy, Jr, Kristi Noem, U.S. Department of Health and Human Services, U.S. Department of Homeland Security. Motion Hearing set for 12/10/2026 10:00 AM in Sa ([document](https://storage.courtlistener.com/recap/gov.uscourts.cand.452203/gov.uscourts.cand.452203.202.0.pdf))
 - `ct-2026-04`: status on file 2026-04-13, docket's newest filing 2026-10-30 — [docket](https://www.courtlistener.com/docket/73183416/united-states-v-state-of-connecticut/)<br>newest entry 2026-10-30: 
-- `az-2026-04`: status on file 2026-07-08, docket's newest filing 2026-11-05 — [docket](https://www.courtlistener.com/docket/73242269/arizona-state-of-v-mullin/)<br>newest entry 2026-09-04:  ([document](https://storage.courtlistener.com/recap/gov.uscourts.azd.1490486/gov.uscourts.azd.1490486.20.0.pdf))
 - `ut-2026-06`: status on file 2026-06-08, docket's newest filing 2026-10-19 — [docket](https://www.courtlistener.com/docket/73456083/salt-lake-city-corporation-v-mullin/)<br>newest entry 2026-10-19:  ([document](https://storage.courtlistener.com/recap/gov.uscourts.utd.164877/gov.uscourts.utd.164877.31.0_1.pdf))
 - `de-2025-04-hsi`: status on file 2026-04-13, docket's newest filing 2026-08-10 — [docket](https://www.courtlistener.com/docket/70988035/in-re-united-states-of-america/)<br>newest entry 2026-08-10: 
 - `nj-2025-08-voca`: status on file 2026-10-08, docket's newest filing 2026-10-26 — [docket](https://www.courtlistener.com/docket/71135488/state-of-new-jersey-v-united-states-department-of-justice/)
@@ -28,8 +24,8 @@
 
 ## Dispute source links that did not load (2)
 
-- https://www.mass.gov/executive-orders/no-650-protecting-access-to-essential-services-and-keeping-massachusetts-communities-safe (failed 2026-11-08)
-- https://www.newarknj.gov/m/newsflash/Archive/Item/107?arcId=157 (failed 2026-11-08)
+- https://www.mass.gov/executive-orders/no-650-protecting-access-to-essential-services-and-keeping-massachusetts-communities-safe (failed 2026-11-09)
+- https://www.newarknj.gov/m/newsflash/Archive/Item/107?arcId=157 (failed 2026-11-09)
 
 ## Help lines hidden this week (not confirmed, no check by hand) (4)
 
@@ -38,25 +34,17 @@
 - `gt`: no source page could be reached
 - `sv`: no source page could be reached
 
-## Organizations hidden on the Organizations tab (fix the row in family_orgs.csv, or remove it) (8)
+## Organizations hidden on the Organizations tab (fix the row in family_orgs.csv, or remove it) (1)
 
-- Church World Service: the phone is no longer on the page named
 - Interfaith Immigration Coalition: fetch failed: website unreachable
-- Ethiopian Community Development Council (ECDC): the phone is no longer on the page named
-- Florence Immigrant & Refugee Rights Project: the phone is no longer on the page named
-- Kino Border Initiative: the phone is no longer on the page named
-- Florida Immigrant Coalition (FLIC): the phone is no longer on the page named
-- Make the Road New Jersey: no IRS record or other identity on file
-- New Sanctuary Movement of Philadelphia (Community Fund for Bond and Legal Support): the phone is no longer on the page named
 
-## Sources older than they should be (6)
+## Sources older than they should be (5)
 
-- Contract type, guaranteed beds and inspection rating per facility (2026-07-20, 112 days; nothing newer posted, checked 2026-11-08)
-- Population, solitary confinement and contract terms per facility (ICE detention statistics workbooks) (2026-07-20, 112 days; nothing newer posted, checked 2026-11-08)
-- Removals, returns and expulsions by fiscal year (yearbook table 39) (2023-09-30, 1136 days; nothing newer posted, checked 2026-11-08)
-- Alternatives to detention, book-ins, removals, length of stay, bond, segregation reasons, parents of US citizens and TPS countries (ICE detention statistics) (2026-07-20, 112 days; nothing newer posted, checked 2026-11-08)
+- Contract type, guaranteed beds and inspection rating per facility (2026-07-20, 112 days; nothing newer posted, checked 2026-11-09)
+- Population, solitary confinement and contract terms per facility (ICE detention statistics workbooks) (2026-07-20, 112 days; nothing newer posted, checked 2026-11-09)
+- Removals, returns and expulsions by fiscal year (yearbook table 39) (2023-09-30, 1136 days; nothing newer posted, checked 2026-11-09)
+- Alternatives to detention, book-ins, removals, length of stay, bond, segregation reasons, parents of US citizens and TPS countries (ICE detention statistics) (2026-07-20, 112 days; nothing newer posted, checked 2026-11-09)
 - Removals from detention by destination country (ICE detention records) (2026-07-31, 101 days)
-- Registered foreign agents and the foreign principals they work for (2026-10-12, 28 days)
 
 ## Court dockets not found yet (they are retried each week) (6)
 
