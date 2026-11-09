@@ -1,40 +1,37 @@
 {
- "started": "2026-11-09T05:53:57+00:00",
+ "started": "2026-11-09T12:13:34+00:00",
  "steps": {
   "lobbying": "ok",
-  "vendorlobby": "timed out",
+  "vendorlobby": "ok",
   "fec": "ok",
   "jfc": "ok",
   "politicians": "ok",
   "donors": "ok",
   "membercom": "ok",
-  "fara": "timed out",
+  "fara": "ok",
   "firms": "ok",
   "firmbase": "ok",
+  "sec": "ok",
   "topdonors": "ok",
-  "countrypacs": "ok",
-  "sec": "ok"
+  "countrypacs": "ok"
  },
  "minutes": {
   "lobbying": 0.6,
-  "vendorlobby": 40.0,
-  "fec": 4.8,
-  "jfc": 7.8,
+  "vendorlobby": 10.2,
+  "fec": 5.3,
+  "jfc": 9.4,
   "politicians": 0.0,
-  "donors": 8.6,
+  "donors": 9.1,
   "membercom": 1.1,
-  "fara": 40.0,
-  "firms": 16.3,
+  "fara": 73.1,
+  "firms": 16.1,
   "firmbase": 0.0,
-  "topdonors": 50.1,
-  "countrypacs": 18.9,
-  "sec": 0.0
+  "sec": 0.0,
+  "topdonors": 50.0,
+  "countrypacs": 0.0
  },
- "errors": {
-  "vendorlobby": "stopped after 40 minutes",
-  "fara": "0 of 538 registrants / 100 of 538 registrants / 200 of 538 registrants / stopped after 40 minutes"
- },
- "earlier_run_started": "2026-11-09T01:15:23+00:00",
- "finished": "2026-11-09T05:53:57+00:00",
+ "errors": {},
+ "earlier_run_started": "2026-11-09T05:53:57+00:00",
+ "finished": "2026-11-09T15:08:34+00:00",
  "page_rebuilt": false
 }

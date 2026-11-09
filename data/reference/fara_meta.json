@@ -1,7 +1,9 @@
 {
- "read": "2026-10-12",
+ "read": "2026-11-09",
+ "read_started": "2026-11-09",
+ "runs": 1,
  "registrants": 538,
  "failed": 0,
- "with_principals": 500,
- "principals": 824
+ "with_principals": 507,
+ "principals": 828
 }
