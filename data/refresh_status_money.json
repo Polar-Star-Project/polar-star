@@ -1,5 +1,5 @@
 {
- "started": "2026-11-09T01:15:23+00:00",
+ "started": "2026-11-09T05:53:57+00:00",
  "steps": {
   "lobbying": "ok",
   "vendorlobby": "timed out",
@@ -34,7 +34,7 @@
   "vendorlobby": "stopped after 40 minutes",
   "fara": "0 of 538 registrants / 100 of 538 registrants / 200 of 538 registrants / stopped after 40 minutes"
  },
- "earlier_run_started": "2026-11-08T22:34:43+00:00",
- "finished": "2026-11-09T01:15:23+00:00",
+ "earlier_run_started": "2026-11-09T01:15:23+00:00",
+ "finished": "2026-11-09T05:53:57+00:00",
  "page_rebuilt": false
 }
