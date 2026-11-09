@@ -289,6 +289,13 @@ def read_extra(data):
 def read_csv(path): return list(csv.DictReader(open(path, encoding="utf-8", newline=""), delimiter="|")) if path.exists() else []
 
 
+def table_day(fy, newest, today):
+    """The date for a workbook's summary tables when neither the ATD report nor the file name gives one: today only for the
+    current year's workbook; a past year's workbook is dated by the end of that fiscal year (Sep 30), never by the day it was
+    read, so a 2019 figure is never shown as this week's."""
+    return today if fy >= newest else f"20{fy[2:4]}-09-30"
+
+
 def write_csv(path, rows, fields):
     with open(path, "w", newline="", encoding="utf-8") as f:
         w = csv.DictWriter(f, fieldnames=fields, delimiter="|", lineterminator="\n"); w.writeheader(); w.writerows(rows)
@@ -323,7 +330,8 @@ def main():
         seen[fy] = {"fy": fy, "url": todo[fy], "read": today}
         try:
             atd, det = read_summary(data, fy)
-            m8 = re.search(r"(\d{2})(\d{2})(\d{4})\.xlsx$", todo[fy]); day = atd[0]["as_of"] if atd else (f"{m8.group(3)}-{m8.group(1)}-{m8.group(2)}" if m8 else today)     # the tables share the ATD report's date; the file name is the posting date
+            m8 = re.search(r"(\d{2})(\d{2})(\d{4})\.xlsx$", todo[fy])
+            day = atd[0]["as_of"] if atd else (f"{m8.group(3)}-{m8.group(1)}-{m8.group(2)}" if m8 else table_day(fy, newest, today))     # the tables share the ATD report's date; the file name is the posting date
             new = []
             for a in atd:
                 new += [{"as_of": a["as_of"], "fy": fy, "measure": "atd_total", "value": a["total"]}, {"as_of": a["as_of"], "fy": fy, "measure": "atd_daily_tech_cost", "value": a["cost"]}]

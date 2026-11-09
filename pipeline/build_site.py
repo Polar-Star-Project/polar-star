@@ -1247,7 +1247,9 @@ def prefill_text(html, hot=None):
     except Exception as e:
         print(f"prefill skipped: {e}"); return html
     import html as H
-    head, cut = html[:html.find("<script")], html.find("<script")
+    cut = html.find("</main>")                    # everything the visitor sees; the theme script in <head> is not a boundary
+    if cut < 0: cut = html.find("<script")
+    head = html[:cut]
     head = re.sub(r'(<[a-z0-9]+\b[^<>]*\sdata-t="([a-zA-Z0-9_]+)"[^<>]*>)(</)', lambda m: m.group(1) + (H.escape(en[m.group(2)], quote=False) if m.group(2) in en else "") + m.group(3), head)
     hot = hot or {}      # confirmed help lines: the number written in, and an unconfirmed line's paragraph hidden, as the script would
     head = re.sub(r'(<span\b[^<>]*\sdata-hl="([a-z_]+)"[^<>]*>)(</span>)', lambda m: m.group(1) + (H.escape(hot[m.group(2)][0]) if hot.get(m.group(2)) and hot[m.group(2)][0] else "") + m.group(3), head)
@@ -1297,6 +1299,8 @@ def state_officials(site, ref):
     if cp and cm:
         money = {}
         cp = [r for r in cp if not r["basis"].startswith("affiliate") or r["source"].startswith("https://www.fec.gov/")]   # an affiliate counts only on the FEC's own record
+        excl = {r["committee_id"] for r in rd_pipe(ref / "country_pacs_excluded.csv")}      # reviewed: a company name the name rule caught
+        cp = [r for r in cp if r["committee_id"] not in excl]
         keep = {r["committee_id"] for r in cp}; held = []
         for r in cm:
             if r["committee_id"] not in keep: continue
@@ -1622,7 +1626,7 @@ def social_list(ref):
 
 ORG_TYPES = ["legal", "kids", "women", "lgbtq", "bond", "visitation", "services", "faith", "community", "advocacy", "research", "news"]
 ORG_IDS = {"EIN", "PROJECT", "GOV", "UNIV", "FAITH"}
-ORG_COLS = ["org", "types", "scope", "states", "website", "phone", "phone_source", "languages", "id_type", "ein", "ein_source", "desc_en", "desc_es", "notes"]
+ORG_COLS = ["org", "types", "scope", "states", "website", "phone", "phone_es", "phone_source", "languages", "id_type", "ein", "ein_source", "desc_en", "desc_es", "notes"]
 ORG_GRACE = 21
 
 def family_orgs(ref, social, today):
@@ -1646,6 +1650,8 @@ def family_orgs(ref, social, today):
         if r["scope"] not in ("national", "state") or (r["scope"] == "state" and not st) or any(x not in US_STATE_CODES or x == "US" for x in st): bad.append("scope/states")
         if not r["website"].startswith("https://"): bad.append("website must be https")
         if r["phone"] and not r["phone_source"].startswith("https://"): bad.append("a phone needs the page it was read from")
+        if re.search(r"[A-Za-z]{2,}", r["phone"]) and not r["phone_es"].strip(): bad.append("a phone with words (which number to call) needs phone_es, the same in Spanish")
+        if r["phone_es"] and re.sub(r"\D", "", r["phone_es"]) != re.sub(r"\D", "", r["phone"]): bad.append("phone_es must carry the same numbers as phone")
         if r["id_type"] and r["id_type"] not in ORG_IDS: bad.append(f"id_type must be one of {sorted(ORG_IDS)} or blank")
         if r["id_type"] in ("EIN", "PROJECT") and not (re.fullmatch(r"\d\d-\d{7}", r["ein"]) and r["ein_source"].startswith("https://")): bad.append("an IRS number (NN-NNNNNNN) and its source")
         if not (r["desc_en"].strip() and r["desc_es"].strip()): bad.append("a description in English and Spanish")
@@ -1663,7 +1669,7 @@ def family_orgs(ref, social, today):
     for r in rows:
         if not shown(r): hidden.append(r["org"]); continue
         host = urllib.parse.urlparse(r["website"]).netloc.lower().removeprefix("www.")
-        out.append([r["org"], r["types"].split(";"), r["scope"], [x for x in r["states"].split(";") if x], r["website"], r["phone"], [x for x in r["languages"].split(";") if x], r["desc_en"], r["desc_es"], acc.get(host, [])])
+        out.append([r["org"], r["types"].split(";"), r["scope"], [x for x in r["states"].split(";") if x], r["website"], r["phone"], [x for x in r["languages"].split(";") if x], r["desc_en"], r["desc_es"], acc.get(host, []), r["phone_es"]])
     if hidden: print("FAMILY ORGANIZATIONS HIDDEN (no identity on file, or not passing the weekly check): " + "; ".join(hidden), file=sys.stderr)
     return {"checked": max((c["checked"] for c in chk.values()), default=""), "hidden": hidden, "orgs": sorted(out, key=lambda o: (o[2] != "national", o[0].lower()))}
 

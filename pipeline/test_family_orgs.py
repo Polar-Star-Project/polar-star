@@ -3,7 +3,7 @@ import datetime as dt
 from build_site import family_orgs, ORG_COLS
 from family_orgs_check import check, phone_on
 
-GOOD = {"org": "Helpers", "types": "legal;kids", "scope": "state", "states": "TX", "website": "https://helpers.org/", "phone": "(512) 555-0100",
+GOOD = {"org": "Helpers", "types": "legal;kids", "scope": "state", "states": "TX", "website": "https://helpers.org/", "phone": "(512) 555-0100", "phone_es": "",
         "phone_source": "https://helpers.org/contact", "languages": "en;es", "id_type": "EIN", "ein": "12-3456789",
         "ein_source": "https://projects.propublica.org/nonprofits/organizations/123456789", "desc_en": "Free lawyers.", "desc_es": "Abogados gratuitos.", "notes": ""}
 
@@ -20,8 +20,10 @@ def rejects(tmp, **change):
 
 def test_rules(tmp):
     assert not rejects(tmp)
+    assert not rejects(tmp, phone="(512) 555-0100 (hotline)", phone_es="(512) 555-0100 (línea de ayuda)")     # the words in Spanish, the same number
     for ch in ({"types": "legal;lawyers"}, {"types": ""}, {"scope": "state", "states": ""}, {"states": "TX;ZZ"}, {"website": "http://helpers.org/"},
-               {"phone_source": ""}, {"id_type": "EIN", "ein": "123"}, {"id_type": "NGO"}, {"desc_es": ""}):
+               {"phone_source": ""}, {"id_type": "EIN", "ein": "123"}, {"id_type": "NGO"}, {"desc_es": ""},
+               {"phone": "(512) 555-0100 (hotline)"}, {"phone": "(512) 555-0100 (hotline)", "phone_es": "(512) 555-0199 (línea)"}):
         assert rejects(tmp, **ch), ch
 
 def test_only_checked_organizations_show(tmp):

@@ -7,8 +7,10 @@ The FEC does not classify PACs by cause, so one written rule is applied to every
   A. Name. A political action committee or super PAC whose registered name names a foreign country, or its people in
      the way a foreign-policy group does ("Armenian National Committee", "Turkish Coalition"), is listed. Names built
      on "<people> American" ("Indian American", "Irish American") describe a US community, not a country's policy,
-     and are left out unless the country itself is also named. Leadership PACs and joint fundraisers are left out
-     (their names are usually a politician's name, and some surnames are also country names). Country names that are
+     and are left out unless the country itself is also named. Leadership PACs, joint fundraisers and a company's own
+     PAC (FEC organization type "corporation", e.g. "Chipotle Mexican Grill PAC") are left out, as are committees in
+     data/reference/country_pacs_excluded.csv (each with the reason it was reviewed out). Leadership PACs and joint fundraisers are left out
+     because their names are usually a politician's name, and some surnames are also country names. Country names that are
      also US state or common place or personal names (Georgia, Jordan, Chad, Niger, Turkey as a word alone) are not
      used as search terms.
   B. Affiliates. A committee whose own FEC registration names a committee listed under A as its affiliated committee.
@@ -98,6 +100,8 @@ def main():
     found, own, cand = st["found"], st["own"], st["cand"]
     money = {(m[0], m[1], m[2]): [m[3], m[4]] for m in st["money"]}
     affiliates = list(csv.DictReader(open(REF / "country_pacs_affiliates.csv", encoding="utf-8"), delimiter="|"))
+    xf = REF / "country_pacs_excluded.csv"           # reviewed: committees the name rule catches that are not about a country (a company's name)
+    excluded = {r["committee_id"] for r in csv.DictReader(open(xf, encoding="utf-8"), delimiter="|")} if xf.exists() else set()
     try:
         # rule A: search committee names for every country word
         while st["w_next"] < len(st["words"]):
@@ -105,7 +109,7 @@ def main():
             while True:
                 j = rd.call("/committees/", q=w, committee_type=PAC_TYPES, per_page=100, page=st["w_page"], cycle=[cyc, cyc - 2])
                 for c in j.get("results") or []:
-                    if c.get("designation") in ("D", "J"): continue
+                    if c.get("designation") in ("D", "J") or c.get("organization_type") == "C" or c["committee_id"] in excluded: continue   # leadership PACs, joint funds, companies' own PACs
                     if matches(c.get("name") or "", words): found.setdefault(c["committee_id"], {"committee_id": c["committee_id"], "name": c["name"], "country": country, "basis": "name", "source": ""})
                 if st["w_page"] >= (j.get("pagination") or {}).get("pages", 1): break
                 st["w_page"] += 1
