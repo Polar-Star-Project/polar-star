@@ -21,7 +21,7 @@ from identity import USER_AGENT
 
 REF = Path(__file__).resolve().parent.parent / "data" / "reference"
 API = "https://efile.fara.gov/api/v1"
-MINUTES = float(os.environ.get("FARA_MINUTES", "30"))
+MINUTES = float(os.environ.get("FARA_MINUTES", "80"))      # a full read is about 75 minutes: one run on the self-hosted runners
 
 
 def get(url):

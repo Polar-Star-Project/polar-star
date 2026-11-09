@@ -75,7 +75,7 @@ LIMIT = 40
 LIMITS = {"records": 60, "transfers": 60, "fec": 90, "jfc": 60, "donors": 60, "membercom": 60, "topdonors": 60, "countrypacs": 60,
           "firmbase": 60, "flights": 60, "tests": 30, "build": 20, "dockets": 20,
           "awards": 60,                                            # about 47 minutes for ~1,160 awards and the retries
-          "statements": 70, "fara": 45, "vendorlobby": 45}         # these read for a set time (60, 30, 30 minutes) and carry on next run
+          "statements": 70, "fara": 90, "vendorlobby": 45}         # these read for a set time (60, 80, 30 minutes) and carry on next run
 
 # The weekly workflow runs two groups side by side, each in its own job with its own time limit: "money" (the FEC and
 # lobbying collectors, slow because those APIs limit requests per minute and hour) and "main" (everything else). The
