@@ -2262,8 +2262,10 @@ def main():
         dyn["cpac"] = jm("country_pacs_meta.json").get("read", ""); dyn["fara"] = jm("fara_meta.json").get("read", ""); dyn["officials"] = jm("officials_meta.json").get("checked", "")
         dyn["moa"] = jm("287g_agreements_meta.json").get("read", ""); dyn["hotlines"] = max((r["checked"] for r in rdx("hotlines_checked.csv")), default="")
         dyn["familyorgs"] = (site.get("family_orgs") or {}).get("checked", "")
+        dyn["memos"] = jm("crcl_memos_meta.json").get("read", "")      # the day crcl_memos.py last read POGO's mirror; blocked reads leave it to age
         ck = {"stats": max((r["read"] for r in rdx("detention_stats_files.csv") if r.get("read")), default="")}    # the days each collector last looked
         for k in ("encounters", "custody", "orr", "repatriations"): ck[k] = (om.get(k) or {}).get("read", "")
+        ck["removed_to"] = rcm.get("read", "")                      # removals_country.py, run after the publisher's file is fetched
         site["sources"], stale = source_rows(SRC_ROWS, dyn, today, ck)
     layers = write_layers(site, flights, ROOT / "site" / "layers")
     pdm = {}

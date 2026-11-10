@@ -34,7 +34,10 @@ def test_built_page_has_no_donor_list():
 def test_no_restricted_name_appears_on_the_page():
     folder = os.environ.get("POLAR_STAR_RESTRICTED", "")
     f = pathlib.Path(folder) / "fec_donors.csv" if folder else None
-    if not f or not f.exists(): return
+    if not f or not f.exists():
+        # the pre-publish gate (publish.yml) sets POLAR_STAR_REQUIRE_RESTRICTED=1: there, a missing vault must stop publishing, not pass
+        assert os.environ.get("POLAR_STAR_REQUIRE_RESTRICTED") != "1", "restricted store required but not found: is the vault mounted on the gate runner?"
+        return
     names = set()
     for r in csv.DictReader(open(f, encoding="utf-8"), delimiter="|"):
         last, _, rest = r["name"].upper().partition(",")
@@ -58,4 +61,22 @@ def test_no_restricted_name_appears_on_the_page():
     reviewed = {tuple(l.split("#")[0].strip().upper().split()[:2]) for l in rv.read_text(encoding="utf-8").splitlines() if l.split("#")[0].strip()} if rv.exists() else set()
     hits = sorted(f"{a} {b}" for a, b in names - public - reviewed
                   if re.search(rf"\b{a}\s+(?:[A-Z]\.?\s+)?{b}\b|\b{b},\s*{a}\b", pages))
-    assert not hits, f"{len(hits)} donor names appear on the page, e.g. {hits[:5]}"
+    # on CI (GitHub logs) only the count is printed, so a match never copies a name off the publisher's machine
+    assert not hits, f"{len(hits)} donor names appear on the page" + ("" if os.environ.get("CI") else f", e.g. {hits[:5]}")
+
+
+def test_restricted_check_fails_closed_when_required(tmp):
+    """The pre-publish gate must stop when the vault is missing, never pass by skipping (review finding 2026-11-09)."""
+    old = {k: os.environ.get(k) for k in ("POLAR_STAR_RESTRICTED", "POLAR_STAR_REQUIRE_RESTRICTED")}
+    try:
+        os.environ["POLAR_STAR_RESTRICTED"] = str(tmp)            # an empty folder: no fec_donors.csv
+        os.environ["POLAR_STAR_REQUIRE_RESTRICTED"] = "1"
+        try: test_no_restricted_name_appears_on_the_page(); raised = False
+        except AssertionError as e: raised = "required but not found" in str(e)
+        assert raised, "a required check passed without the restricted store"
+        os.environ["POLAR_STAR_REQUIRE_RESTRICTED"] = "0"
+        test_no_restricted_name_appears_on_the_page()             # elsewhere (developer runs, the GitHub build) it still skips quietly
+    finally:
+        for k, v in old.items():
+            if v is None: os.environ.pop(k, None)
+            else: os.environ[k] = v

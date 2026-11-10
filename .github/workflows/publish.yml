@@ -14,7 +14,34 @@ concurrency:
 permissions:
   contents: read
 jobs:
+  restricted-name-gate:
+    # Runs on tesseract, the only machine that can see the vault, on a runner kept for this check alone (label
+    # polar-star-gate; the collector runners never see the restricted folder). Checks the exact commit about to be
+    # published for any restricted donor name. Fails closed: no vault mounted means nothing publishes.
+    if: >
+      github.repository == 'Polar-Star-Project/polar-star-development' &&
+      (github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success')
+    runs-on: [self-hosted, polar-star-gate]
+    timeout-minutes: 15
+    outputs:
+      sha: ${{ steps.sha.outputs.sha }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1   # v7.0.1
+        with:
+          ref: main
+          persist-credentials: false
+      - id: sha
+        run: echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0   # v7.1.0
+        with:
+          python-version: "3.12"
+      - name: No restricted name on the page (prints a count only, never a name)
+        env:
+          POLAR_STAR_RESTRICTED: /restricted/polar-star      # mounted read-only into the gate runner only
+          POLAR_STAR_REQUIRE_RESTRICTED: "1"                 # a missing vault fails the check instead of skipping it
+        run: python -c "import sys; sys.path.insert(0, 'pipeline'); import test_no_private_names as t; t.test_no_restricted_name_appears_on_the_page(); print('restricted-name check passed')"
   publish:
+    needs: restricted-name-gate
     if: >
       github.repository == 'Polar-Star-Project/polar-star-development' &&
       (github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success')
@@ -22,7 +49,7 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1   # v7.0.1
         with:
-          ref: main
+          ref: ${{ needs.restricted-name-gate.outputs.sha }}   # publish exactly what the gate checked, even if main moved since
           fetch-depth: 0
           persist-credentials: false
       - name: Block restricted paths anywhere in history (fails closed)

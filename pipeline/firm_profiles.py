@@ -89,8 +89,8 @@ def is_person(name, desc=""):
     if _given is None:
         try:
             import gender_guesser.detector as gg; _given = gg.Detector(case_sensitive=False).get_gender
-        except ImportError: _given = False
-    if not _given: return False
+        except ImportError:   # fail closed: without the name list every private person would read as an organization and be named
+            raise RuntimeError("gender-guesser is not installed (pip install -r requirements.txt); refusing to decide who is a private person")
     known = lambda x: _given(x.capitalize()) != "unknown"
     if hashlib.sha1(" ".join(w).upper().encode()).hexdigest()[:12] in PEOPLE: return True
     return known(w[0]) and " ".join(w).upper() not in NAMED_FOR_PEOPLE

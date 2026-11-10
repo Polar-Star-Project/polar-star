@@ -42,6 +42,7 @@ def main():
     if len(rows) < 40: raise SystemExit(f"Only {len(rows)} dated CRCL memos found among {len(docs)} documents; the mirror or its naming may have changed. Nothing written.")
     with open(REF / "crcl_memos.csv", "w", newline="", encoding="utf-8") as f:
         w = csv.DictWriter(f, fieldnames=["published", "title", "kind", "url", "slug"], delimiter="|", lineterminator="\n"); w.writeheader(); w.writerows(rows)
+    (REF / "crcl_memos_meta.json").write_text(json.dumps({"read": time.strftime("%Y-%m-%d", time.gmtime()), "memos": len(rows)}, indent=1), encoding="utf-8")   # the page flags the list as stale when this gets old
     print(f"{len(rows)} dated CRCL memos from {len(docs)} documents in POGO's mirror ({rows[0]['published']} to {rows[-1]['published']})")
 
 

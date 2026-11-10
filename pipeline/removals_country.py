@@ -8,7 +8,7 @@ departure country ICE recorded (citizenship country where no departure country i
 The 20 largest countries over the whole file are kept; the rest are "Other". The newest month is partial and left out.
 Removals of people never held in detention (for example straight from the border) are not in these records.
 """
-import csv, json, sys
+import csv, datetime as dt, json, sys
 from pathlib import Path
 import pandas as pd
 from arrests_trend import pick
@@ -50,5 +50,6 @@ if __name__ == "__main__":
     if len(months) < 12 or not (5000 < sum(r[2] for r in rows if r[0] == months[-1]) < 200000): raise SystemExit(f"Implausible result ({len(months)} months). Nothing written.")
     with open(REF / "removals_by_country.csv", "w", newline="", encoding="utf-8") as f:
         w = csv.writer(f, delimiter="|"); w.writerow(["month", "country", "removals"]); w.writerows(rows)
-    (REF / "removals_by_country_meta.json").write_text(json.dumps({"removals": n, "citizenship_used": filled, "first": months[0], "last": months[-1]}, indent=1), encoding="utf-8")
+    (REF / "removals_by_country_meta.json").write_text(json.dumps({"removals": n, "citizenship_used": filled, "first": months[0], "last": months[-1],
+                                                                 "read": str(dt.datetime.now(dt.timezone.utc).date())}, indent=1), encoding="utf-8")   # the day the publisher's newest file was read; lets the page say "nothing newer posted"
     print(f"{n:,} removals, {months[0]} to {months[-1]}; {filled:,} with no departure country (citizenship used)", file=sys.stderr)

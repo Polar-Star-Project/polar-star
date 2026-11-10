@@ -653,3 +653,16 @@ def test_display_name_keeps_ice_name_and_rejects_unknown_codes(tmp_path):
     assert f["name"] == "Camp Short" and f["ice_name"] == "Enforcement and Removal Operations Long Name" and f["name_src"] == "https://www.ice.gov/x"
     try: display_names({"facilities": {}}, tmp_path); assert False, "an unknown code must stop the build"
     except ValueError: pass
+
+
+def test_source_rows_flag_stale_memos_and_say_when_removed_to_was_checked():
+    """memos: a blocked mirror ages until flagged. removed_to: an old file that was checked says so (review findings 2026-11-09)."""
+    import build_site as b
+    R = lambda key, read, age: {"what_en": key, "what_es": key, "publisher": "p", "url": "u", "key": key, "read": read, "max_age_days": str(age)}
+    rows = [R("memos", "2026-09-01", 45), R("removed_to", "2026-01-01", 75), R("fresh", "2026-01-01", 75)]
+    dyn = {"memos": "2026-09-01", "removed_to": "2026-07-31", "fresh": "2026-11-01"}
+    out, stale = b.source_rows(rows, dyn, "2026-11-09", {"removed_to": "2026-11-09"})
+    assert any(s.startswith("memos (2026-09-01, 69 days)") for s in stale), stale
+    assert any(s.startswith("removed_to (2026-07-31, 101 days; nothing newer posted, checked 2026-11-09)") for s in stale), stale
+    assert not any(s.startswith("fresh") for s in stale) and [r[6] for r in out] == [1, 1, 0]
+
