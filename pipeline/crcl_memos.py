@@ -32,7 +32,7 @@ def parse(doc):
 
 
 def main():
-    url, docs = API + urllib.parse.urlencode({"q": f"organization:{POGO_ORG} crcl", "per_page": 100}), []
+    url, docs = API + urllib.parse.urlencode({"q": f"organization:{POGO_ORG} crcl", "per_page": 25}), []   # anonymous API callers get at most 25 a page
     for _ in range(20):
         req = urllib.request.Request(url, headers={"User-Agent": USER_AGENT})
         j = json.loads(urllib.request.urlopen(req, timeout=60).read().decode("utf-8")); docs += j.get("results", []); url = j.get("next")

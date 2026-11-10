@@ -4,7 +4,7 @@ numpy
 openpyxl
 requests
 phonenumbers
-playwright
+playwright==1.65.0
 beautifulsoup4
 pymupdf
 pytesseract
