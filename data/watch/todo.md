@@ -1,4 +1,4 @@
-# Weekly to-do, 2026-11-09
+# Weekly to-do, 2026-11-10
 
 26 items. Nothing here changes the page by itself.
 
@@ -40,11 +40,11 @@
 
 ## Sources older than they should be (5)
 
-- Contract type, guaranteed beds and inspection rating per facility (2026-07-20, 112 days; nothing newer posted, checked 2026-11-09)
-- Population, solitary confinement and contract terms per facility (ICE detention statistics workbooks) (2026-07-20, 112 days; nothing newer posted, checked 2026-11-09)
-- Removals, returns and expulsions by fiscal year (yearbook table 39) (2023-09-30, 1136 days; nothing newer posted, checked 2026-11-09)
-- Alternatives to detention, book-ins, removals, length of stay, bond, segregation reasons, parents of US citizens and TPS countries (ICE detention statistics) (2026-07-20, 112 days; nothing newer posted, checked 2026-11-09)
-- Removals from detention by destination country (ICE detention records) (2026-07-31, 101 days)
+- Contract type, guaranteed beds and inspection rating per facility (2026-07-20, 113 days; nothing newer posted, checked 2026-11-09)
+- Population, solitary confinement and contract terms per facility (ICE detention statistics workbooks) (2026-07-20, 113 days; nothing newer posted, checked 2026-11-09)
+- Removals, returns and expulsions by fiscal year (yearbook table 39) (2023-09-30, 1137 days; nothing newer posted, checked 2026-11-09)
+- Alternatives to detention, book-ins, removals, length of stay, bond, segregation reasons, parents of US citizens and TPS countries (ICE detention statistics) (2026-07-20, 113 days; nothing newer posted, checked 2026-11-09)
+- Removals from detention by destination country (ICE detention records) (2026-07-31, 102 days)
 
 ## Court dockets not found yet (they are retried each week) (6)
 
