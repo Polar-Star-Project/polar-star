@@ -1,6 +1,6 @@
-# Weekly to-do, 2026-11-10
+# Weekly to-do, 2026-11-11
 
-26 items. Nothing here changes the page by itself.
+25 items. Nothing here changes the page by itself.
 
 ## Refresh steps that failed (1)
 
@@ -17,10 +17,6 @@
 ## Docket filings not read yet that look routine (lawyers joining or leaving, transcripts) (1)
 
 - `wi-2025-04-dugan`: status on file 2026-07-09, docket's newest filing 2026-07-24 — [docket](https://www.courtlistener.com/docket/70255703/united-states-v-dugan/)<br>newest entry 2026-07-24: TRANSCRIPT of Sentencing Hearing as to Hannah C Dugan held on July 8, 2026, before Judge Lynn Adelman. Court Reporter/Transcriber Jennifer Stake, Contact at 414-290-2640. Transcripts may be purchased using the Transcript Order Form found on
-
-## Statuses updated this week from the court's own docket (shown on the page as quoted; nothing to do) (1)
-
-- `nj-2026-02-eo12`: 2026-11-03: NOTICE OF APPEAL as to 35 Order on Motion to Dismiss/Lack of Jurisdiction,,, by THE UNITED STATES OF AMERICA. The Clerk's Office hereby certifies the record and the docket sheet available through ECF  ([record](https://www.courtlistener.com/docket/72316303/united-states-v-new-jersey/#entry-36))
 
 ## Dispute source links that did not load (2)
 
@@ -40,11 +36,11 @@
 
 ## Sources older than they should be (5)
 
-- Contract type, guaranteed beds and inspection rating per facility (2026-07-20, 113 days; nothing newer posted, checked 2026-11-09)
-- Population, solitary confinement and contract terms per facility (ICE detention statistics workbooks) (2026-07-20, 113 days; nothing newer posted, checked 2026-11-09)
-- Removals, returns and expulsions by fiscal year (yearbook table 39) (2023-09-30, 1137 days; nothing newer posted, checked 2026-11-09)
-- Alternatives to detention, book-ins, removals, length of stay, bond, segregation reasons, parents of US citizens and TPS countries (ICE detention statistics) (2026-07-20, 113 days; nothing newer posted, checked 2026-11-09)
-- Removals from detention by destination country (ICE detention records) (2026-07-31, 102 days)
+- Contract type, guaranteed beds and inspection rating per facility (2026-07-20, 114 days; nothing newer posted, checked 2026-11-09)
+- Population, solitary confinement and contract terms per facility (ICE detention statistics workbooks) (2026-07-20, 114 days; nothing newer posted, checked 2026-11-09)
+- Removals, returns and expulsions by fiscal year (yearbook table 39) (2023-09-30, 1138 days; nothing newer posted, checked 2026-11-09)
+- Alternatives to detention, book-ins, removals, length of stay, bond, segregation reasons, parents of US citizens and TPS countries (ICE detention statistics) (2026-07-20, 114 days; nothing newer posted, checked 2026-11-09)
+- Removals from detention by destination country (ICE detention records) (2026-07-31, 103 days)
 
 ## Court dockets not found yet (they are retried each week) (6)
 
