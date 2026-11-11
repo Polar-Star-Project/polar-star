@@ -2,7 +2,7 @@
 
 What "done" means for this repo. The ariadnes-clew-review skill checks every line. The repo is converged when all items are met or listed under Accepted gaps. The counsel (an AI review panel, `references/counsel.md` in the skill) recommends changes; Ian ratifies them by editing this file. The reviewer only proposes, via `reviews/bar-suggestions.md`.
 
-Draft 2026-11-09 from review finding `polar-star:no-bar`. Not in force until Ian commits it.
+Adopted 2026-11-10 (review finding `polar-star:no-bar`).
 
 ## Must hold (S0 if broken)
 - [ ] No private individual's name in any tracked file or public-mirror history: every test in `pipeline/test_no_private_names.py` passes

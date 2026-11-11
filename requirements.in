@@ -1,0 +1,12 @@
+pandas
+pyarrow
+numpy
+openpyxl
+requests
+phonenumbers
+playwright==1.65.0
+beautifulsoup4
+pymupdf
+pytesseract
+pillow
+gender-guesser

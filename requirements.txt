@@ -1,12 +1,36 @@
-pandas
-pyarrow
-numpy
-openpyxl
-requests
-phonenumbers
-playwright==1.65.0
-beautifulsoup4
-pymupdf
-pytesseract
-pillow
-gender-guesser
+# Every package pinned, so a new release cannot change the Monday refresh under it (2026-11-09: an unpinned playwright
+# needed a system library the runners lacked). Edit requirements.in, then regenerate on Python 3.12 and run the tests:
+#   uv pip compile requirements.in --python-version 3.12 --annotation-style line -o requirements.txt
+# Keep playwright equal to the version in the runner image (polar-star-runner/Dockerfile).
+beautifulsoup4==4.15.0    # via requirements.in
+certifi==2026.10.23       # via requests
+charset-normalizer==3.5.2  # via requests
+et-xmlfile==2.0.0         # via openpyxl
+flatbuffers==25.12.19     # via onnxruntime
+gender-guesser==0.4.0     # via requirements.in
+greenlet==3.5.6           # via playwright
+idna==3.20                # via requests
+networkx==3.7             # via pymupdf
+numpy==2.5.4              # via onnxruntime, pandas, pymupdf, requirements.in
+onnxruntime==1.31.1       # via pymupdf
+openpyxl==3.1.5           # via requirements.in
+packaging==26.3           # via onnxruntime, pytesseract
+pandas==3.1.1             # via requirements.in
+phonenumbers==9.0.43      # via requirements.in
+pillow==13.0.0            # via pytesseract, requirements.in
+playwright==1.65.0        # via requirements.in
+protobuf==7.36.2          # via onnxruntime
+psutil==7.2.2             # via pymupdf
+pyarrow==26.0.1           # via requirements.in
+pymupdf==2.1              # via pymupdf-layout, pymupdf4llm, requirements.in
+pymupdf-layout==2.1       # via pymupdf, pymupdf4llm
+pymupdf4llm==2.1          # via pymupdf, pymupdf-layout
+pytesseract==0.3.13       # via requirements.in
+python-dateutil==4.0.0    # via pandas
+pyyaml==6.0.3             # via pymupdf
+requests==2.34.2          # via requirements.in
+soupsieve==4.1            # via beautifulsoup4
+tabulate==0.10.0          # via pymupdf
+typing-extensions==4.16.0  # via beautifulsoup4
+tzdata==2026.6            # via python-dateutil
+urllib3==2.8.0            # via requests
