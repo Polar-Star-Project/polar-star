@@ -1,10 +1,11 @@
-# Weekly to-do, 2026-11-11
+# Weekly to-do, 2026-11-12
 
-25 items. Nothing here changes the page by itself.
+27 items. Nothing here changes the page by itself.
 
-## Refresh steps that failed (1)
+## Refresh steps that failed (2)
 
 - `memos`: failed —  492, in _call_chain /     result = func(*args) /              ^^^^^^^^^^^ /   File "/opt/hostedtoolcache/Python/3.12.16/x64/lib/python3.12/urllib/request.py", line 639, in http_error_default /     raise HTTPError(req.full_url, code, msg, hdrs, fp) / urllib.error.HTTPError: HTTP Error 403: Forbidden
+- `others`: failed —   yearbook 2024: table 39 not found or too short / repatriations: ok / orr FAILED: children-in-care row not found / notices: ok / money: ok / failed parts: orr (their old files are unchanged)
 
 ## Disputes whose docket has filings the weekly step could not read yet (no docket text on CourtListener; they are retried each week) (5)
 
@@ -34,13 +35,14 @@
 
 - Interfaith Immigration Coalition: fetch failed: website unreachable
 
-## Sources older than they should be (5)
+## Sources older than they should be (6)
 
-- Contract type, guaranteed beds and inspection rating per facility (2026-07-20, 114 days; nothing newer posted, checked 2026-11-09)
-- Population, solitary confinement and contract terms per facility (ICE detention statistics workbooks) (2026-07-20, 114 days; nothing newer posted, checked 2026-11-09)
-- Removals, returns and expulsions by fiscal year (yearbook table 39) (2023-09-30, 1138 days; nothing newer posted, checked 2026-11-09)
-- Alternatives to detention, book-ins, removals, length of stay, bond, segregation reasons, parents of US citizens and TPS countries (ICE detention statistics) (2026-07-20, 114 days; nothing newer posted, checked 2026-11-09)
-- Removals from detention by destination country (ICE detention records) (2026-07-31, 103 days)
+- Contract type, guaranteed beds and inspection rating per facility (2026-07-20, 115 days; nothing newer posted, checked 2026-11-09)
+- Population, solitary confinement and contract terms per facility (ICE detention statistics workbooks) (2026-07-20, 115 days; nothing newer posted, checked 2026-11-09)
+- Removals, returns and expulsions by fiscal year (yearbook table 39) (2023-09-30, 1139 days; nothing newer posted, checked 2026-11-12)
+- Alternatives to detention, book-ins, removals, length of stay, bond, segregation reasons, parents of US citizens and TPS countries (ICE detention statistics) (2026-07-20, 115 days; nothing newer posted, checked 2026-11-09)
+- Removals from detention by destination country (ICE detention records) (2026-07-31, 104 days)
+- Organizations that help families: websites, phone numbers and IRS records, checked each week (2026-10-28, 15 days)
 
 ## Court dockets not found yet (they are retried each week) (6)
 

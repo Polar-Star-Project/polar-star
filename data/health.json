@@ -1,11 +1,12 @@
 {
- "built": "2026-11-11",
+ "built": "2026-11-12",
  "stale": [
-  "Contract type, guaranteed beds and inspection rating per facility (2026-07-20, 114 days; nothing newer posted, checked 2026-11-09)",
-  "Population, solitary confinement and contract terms per facility (ICE detention statistics workbooks) (2026-07-20, 114 days; nothing newer posted, checked 2026-11-09)",
-  "Removals, returns and expulsions by fiscal year (yearbook table 39) (2023-09-30, 1138 days; nothing newer posted, checked 2026-11-09)",
-  "Alternatives to detention, book-ins, removals, length of stay, bond, segregation reasons, parents of US citizens and TPS countries (ICE detention statistics) (2026-07-20, 114 days; nothing newer posted, checked 2026-11-09)",
-  "Removals from detention by destination country (ICE detention records) (2026-07-31, 103 days)"
+  "Contract type, guaranteed beds and inspection rating per facility (2026-07-20, 115 days; nothing newer posted, checked 2026-11-09)",
+  "Population, solitary confinement and contract terms per facility (ICE detention statistics workbooks) (2026-07-20, 115 days; nothing newer posted, checked 2026-11-09)",
+  "Removals, returns and expulsions by fiscal year (yearbook table 39) (2023-09-30, 1139 days; nothing newer posted, checked 2026-11-12)",
+  "Alternatives to detention, book-ins, removals, length of stay, bond, segregation reasons, parents of US citizens and TPS countries (ICE detention statistics) (2026-07-20, 115 days; nothing newer posted, checked 2026-11-09)",
+  "Removals from detention by destination country (ICE detention records) (2026-07-31, 104 days)",
+  "Organizations that help families: websites, phone numbers and IRS records, checked each week (2026-10-28, 15 days)"
  ],
  "layers": {
   "facilities": 561,
