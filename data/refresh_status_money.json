@@ -1,5 +1,5 @@
 {
- "started": "2026-11-11T04:57:18+00:00",
+ "started": "2026-11-12T07:45:31+00:00",
  "steps": {
   "lobbying": "ok",
   "vendorlobby": "ok",
@@ -31,7 +31,7 @@
   "countrypacs": 0.0
  },
  "errors": {},
- "earlier_run_started": "2026-11-10T22:37:11+00:00",
- "finished": "2026-11-11T04:57:18+00:00",
+ "earlier_run_started": "2026-11-11T04:57:18+00:00",
+ "finished": "2026-11-12T07:45:31+00:00",
  "page_rebuilt": false
 }
