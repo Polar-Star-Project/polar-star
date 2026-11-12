@@ -65,6 +65,7 @@ STEPS = [  # name, command after "python", required
     ("districts",  ["pipeline/districts.py"], False),
     ("flights",    ["pipeline/flights.py", "--catchup", "8"], False),
     ("probe",      ["pipeline/probe_sources.py"], False),
+    ("contract",   ["pipeline/export_contract.py"], False),          # data contract for Ariadne's Clew (entities/claims/sources by UEI)
     ("tests",      ["pipeline/run_tests.py"], True),
     ("build",      ["pipeline/build_site.py"], True),
 ]

@@ -10,7 +10,7 @@ Writes, in data/reference/ ("|" separated):
                                table 39, rounded to the nearest 10 by the source. Ends where the source ends (no figure is estimated).
   other_money.csv              agency|program|recipient|musd     obligations in the window, by recipient. The last row of each program
                                (recipient blank) is everything not listed, so a program's rows add up to its total.
-  other_money_payees.csv       every payee of $1 million or more (paid or taken back) in each program, private people left out, for
+  other_money_payees.csv       every payee of $1 million or more (paid or taken back) in each program, with its UEI, private people left out, for
                                finding companies paid by more than one agency.
   other_money_meta.json        the window, the day read, each program's total, and how many payees were left out as private people.
   cbp_notices_seen.csv         url|title|first_seen     CBP death notices listed on its accountability page, for a person to review.
@@ -76,6 +76,24 @@ ORG = re.compile(r"\b(LLC|L\.L\.C|INC|INCORPORATED|CORP|CORPORATION|CO|COMPANY|L
 
 # A practice named after a person (Dr. ..., ... M.D.) is a business on paper but names a private person, so it is left out too.
 PERSONAL = re.compile(r"^(DR|MR|MRS|MS|MISS)\.?\s|\b(M\.?D|D\.?D\.?S|PH\.?D|ESQ|R\.?N|LCSW|LPC)\.?(,|\s|$)", re.I)
+
+
+UEI = re.compile(r"^[A-HJ-NP-Z1-9][A-HJ-NP-Z0-9]{11}$")
+
+
+def uei_from(x):
+    """The payee's Unique Entity ID from a USAspending recipient row ('uei'; older rows carried it in 'code'), or '' when
+    there is none or it is not a valid UEI. The UEI is what lets Ariadne's Clew match a payee across projects without names."""
+    for k in ("uei", "code"):
+        v = (x.get(k) or "").strip().upper()
+        if UEI.match(v): return v
+    return ""
+
+
+def payee_rows(agency, program, kept, uei_of):
+    """Every payee of $1 million or more (either way), with its UEI where USAspending gives one."""
+    return [{"agency": agency, "program": program, "recipient": n.replace("|", "/"), "musd": round(a / 1e6, 1), "uei": uei_of.get(n, "")}
+            for n, a in kept if abs(a) >= 1e6]
 
 
 def looks_like_business(name):
@@ -325,7 +343,7 @@ def main():
                 time.sleep(5 * (i + 1))
             raise RuntimeError(f"USAspending did not answer {path}: {err}")
         start, end, fys = window(dt.date.today())
-        rows, progs, payees = [], {}, []
+        rows, progs, payees, uei_of = [], {}, [], {}
         for agency, prog, types, ag, extra in PROGRAMS:
             F = {"time_period": [{"start_date": start, "end_date": end}], "award_type_codes": types, **extra}
             if ag: F["agencies"] = [{"type": "awarding", "tier": "subtier", "name": AG[ag][0], "toptier_name": AG[ag][1]}]
@@ -335,6 +353,7 @@ def main():
             while pg <= 8:
                 j = call("/api/v2/search/spending_by_category/recipient/", {"filters": F, "limit": 100, "page": pg})
                 recips += [(x.get("name"), x.get("amount") or 0) for x in j["results"]]
+                uei_of.update({x.get("name"): uei_from(x) for x in j["results"]})
                 if not j.get("page_metadata", {}).get("hasNext"): complete = True; break
                 pg += 1
             names = lambda kind: {x.get("name") for x in call("/api/v2/search/spending_by_category/recipient/", {"filters": dict(F, recipient_type_names=[kind]), "limit": 100, "page": 1})["results"]}
@@ -342,7 +361,7 @@ def main():
                 raise ValueError(f"{agency}/{prog}: payees add to {sum(a for _, a in recips) / 1e6:.1f}M, not the total {total / 1e6:.1f}M")
             kept, n_drop, a_drop = drop_people(recips, names("individuals"), names("sole_proprietorship"))
             rows += money_rows(agency, prog, total, kept, False)
-            payees += [{"agency": agency, "program": prog, "recipient": n.replace("|", "/"), "musd": round(a / 1e6, 1)} for n, a in kept if abs(a) >= 1e6]
+            payees += payee_rows(agency, prog, kept, uei_of)
             progs[f"{agency}/{prog}"] = {"total_musd": round(total / 1e6, 1), "by_fy_musd": {str(k): round(v / 1e6, 1) for k, v in sorted(yearly.items())},
                                          "private_people_left_out": n_drop, "all_payees_read": complete,
                                          "taken_back_musd": round(-sum(a for _, a in recips if a < 0) / 1e6, 1), "filters": extra}
@@ -353,11 +372,12 @@ def main():
         while pg <= 12:
             j = call("/api/v2/search/spending_by_category/recipient/", {"filters": F, "limit": 100, "page": pg})
             ice += [(x.get("name"), x.get("amount") or 0) for x in j["results"]]
+            uei_of.update({x.get("name"): uei_from(x) for x in j["results"]})
             if not j.get("page_metadata", {}).get("hasNext"): break
             pg += 1
         names = lambda kind: {x.get("name") for x in call("/api/v2/search/spending_by_category/recipient/", {"filters": dict(F, recipient_type_names=[kind]), "limit": 100, "page": 1})["results"]}
         kept, _, _ = drop_people(ice, names("individuals"), names("sole_proprietorship"))
-        write("ice_payees_all.csv", [{"recipient": n.replace("|", "/"), "musd": round(a / 1e6, 1)} for n, a in kept if abs(a) >= 1e6], ["recipient", "musd"])
+        write("ice_payees_all.csv", [{"recipient": n.replace("|", "/"), "musd": round(a / 1e6, 1), "uei": uei_of.get(n, "")} for n, a in kept if abs(a) >= 1e6], ["recipient", "musd", "uei"])
         dod = []
         for aid in DOD_AWARDS:
             d = call(f"/api/v2/awards/{aid}/")
@@ -366,7 +386,7 @@ def main():
                         "start": (d.get("period_of_performance") or {}).get("start_date"), "what": (d.get("description") or "")[:160],
                         "url": f"https://www.usaspending.gov/award/{aid}"})
         write("other_money.csv", rows, ["agency", "program", "recipient", "musd"])
-        write("other_money_payees.csv", payees, ["agency", "program", "recipient", "musd"])     # every payee of $1M or more (either way), for matching across agencies
+        write("other_money_payees.csv", payees, ["agency", "program", "recipient", "musd", "uei"])     # every payee of $1M or more (either way), for matching across agencies
         json.dump({"from": start, "to": end, "fys": fys, "read": dt.date.today().isoformat(), "programs": progs, "dod_awards": dod},
                   open(REF / "other_money_meta.json", "w", encoding="utf-8"), indent=1)
 
