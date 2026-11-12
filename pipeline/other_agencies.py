@@ -36,7 +36,7 @@ ORR_PAGES = {"ops": "https://acf.gov/orr/data/uac-operational", "rel": "https://
 MON = {m: i for i, m in enumerate(["JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"], 1)}
 
 # ---- what each agency's money is, in the source's own terms -------------------------------------------------------------------------
-CONTRACTS, GRANTS = ["A", "B", "C", "D"], ["02", "03", "04", "05"]
+CONTRACTS, GRANTS = ["A", "B", "C", "D"], ["02", "03", "04", "05", "F001", "F002"]   # F001/F002: USAspending's newer grant codes; without them newer grants drop out silently
 AG = {"CBP": ("U.S. Customs and Border Protection", "Department of Homeland Security"),
       "ACF": ("Administration for Children and Families", "Department of Health and Human Services"),
       "FEMA": ("Federal Emergency Management Agency", "Department of Homeland Security"),

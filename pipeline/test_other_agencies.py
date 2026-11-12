@@ -134,3 +134,10 @@ def test_page_functions_have_unique_names():
     src = (Path(__file__).resolve().parent.parent / "site" / "template.html").read_text(encoding="utf-8")
     dup = [n for n, c in collections.Counter(re.findall(r"^\s*function\s+([A-Za-z_$][\w$]*)\s*\(", src, re.M)).items() if c > 1]
     assert not dup, f"functions defined twice: {dup}"
+
+
+def test_grant_filter_includes_usaspendings_newer_grant_codes():
+    """USAspending files newer grants as F001 (Grant) and F002 (Cooperative Agreement); a filter of 02-05 alone dropped them
+    silently (found 2026-11-12 when most Head Start grants made since 2022 were missing)."""
+    import other_agencies as oa
+    assert {"02", "03", "04", "05", "F001", "F002"} <= set(oa.GRANTS)
