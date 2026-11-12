@@ -11,6 +11,11 @@ SITE_URL = "https://polarstarproject.org"      # the public address, used in sha
 USER_AGENT = "polar-star-data-refresh (public-interest, non-commercial)"
 
 
+from clew_core.identity import Identity        # shared framework (pipeline/clew_core)
+
+IDENTITY = Identity(PUBLISHER, NAME, REPO_URL, CONTACT, SITE_URL, USER_AGENT)
+
+
 def sec_user_agent():
     """The SEC asks every automated request to name a contact address. None until CONTACT is set."""
-    return f"{PUBLISHER} data refresh {CONTACT}" if CONTACT else None
+    return IDENTITY.sec_user_agent()

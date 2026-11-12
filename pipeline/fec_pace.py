@@ -24,68 +24,29 @@ MAX_AGE_DAYS = 42
 REST_DAYS = int(os.environ.get("REST_DAYS", "28"))            # after a complete read, a slow-changing source is read again after this many days
 
 
-class Pause(Exception):
-    """Time is up for this run, or the FEC asked us to slow down: save and carry on next week."""
-
-
-class Deadline:
-    """This run's reading time for a collector that does not go through Reader."""
-    def __init__(self, minutes, clock=time.monotonic):
-        self.clock, self.end = clock, clock() + minutes * 60
-    def up(self): return self.clock() >= self.end
+from clew_core.pacing import Pause, Deadline          # shared framework (pipeline/clew_core); same classes as before
+from clew_core import pacing as _pacing
 
 
 def rested(name, meta, days=None, today=None):
     """True when no read is under way for `name` and the last complete read (the "read" date in its meta file) is under
     `days` old: the collector skips this run. A missing or unreadable meta file never rests."""
-    days, today = REST_DAYS if days is None else days, today or dt.date.today()
-    if (PROGRESS / f"{name}.json").exists() or not Path(meta).exists(): return False
-    try: last = dt.date.fromisoformat(json.loads(Path(meta).read_text(encoding="utf-8"))["read"][:10])
-    except Exception: return False
-    return (today - last).days < days
+    return _pacing.rested(PROGRESS, name, meta, REST_DAYS if days is None else days, today)
 
 
-class Reader:
+class Reader(_pacing.Reader):
     def __init__(self, key, minutes=MINUTES, pace=PACE, opener=None, clock=time.monotonic, sleep=time.sleep):
-        self.key, self.pace, self.clock, self.sleep = key, pace, clock, sleep
-        self.end = clock() + minutes * 60
-        self.open = opener or (lambda url: urllib.request.urlopen(url, timeout=120))
-        self.calls = 0
-
-    def call(self, path, **q):
-        """One FEC request at the steady pace. Raises Pause when time is up or on HTTP 429; SystemExit when the FEC keeps failing."""
-        url = f"{API}{path}?" + urllib.parse.urlencode(dict(q, api_key=self.key), doseq=True); err = ""
-        for i in range(6):
-            if self.clock() >= self.end: raise Pause("time is up for this run")
-            try:
-                with self.open(url) as r:
-                    self.calls += 1; self.sleep(self.pace); return json.loads(r.read().decode("utf-8"))
-            except urllib.error.HTTPError as e:
-                if e.code == 429: raise Pause("the FEC asked us to slow down (429)")
-                err = f"HTTP {e.code}"
-                if e.code == 422: break
-            except Exception as e:
-                err = str(e)[:160]
-            self.sleep(45 if i < 3 else 120)                     # the FEC is busy or a request timed out: wait, then try again
-        raise SystemExit(f"FEC did not answer {path}: {err}. Progress is kept; nothing else written.")
+        super().__init__(API, key, minutes, pace, opener, clock, sleep, who="the FEC", name="FEC")
 
 
 def load(name, cycle, today=None):
     """The saved position for this collector, or a fresh one when there is none, it is for another cycle, or it is too old."""
-    today = today or dt.date.today()
-    p = PROGRESS / f"{name}.json"
-    if p.exists():
-        st = json.loads(p.read_text(encoding="utf-8"))
-        if st.get("cycle") == cycle and (today - dt.date.fromisoformat(st["started"])).days <= MAX_AGE_DAYS: return st
-    return {"cycle": cycle, "started": str(today), "runs": 0}
+    return _pacing.load(PROGRESS, name, cycle, MAX_AGE_DAYS, today)
 
 
 def save(name, st):
-    PROGRESS.mkdir(parents=True, exist_ok=True)
-    st["runs"] = st.get("runs", 0) + 1
-    (PROGRESS / f"{name}.json").write_text(json.dumps(st, separators=(",", ":")), encoding="utf-8")
+    _pacing.save(PROGRESS, name, st)
 
 
 def clear(name):
-    p = PROGRESS / f"{name}.json"
-    if p.exists(): p.unlink()
+    _pacing.clear(PROGRESS, name)
