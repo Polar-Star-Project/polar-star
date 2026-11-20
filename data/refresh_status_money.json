@@ -1,0 +1,37 @@
+{
+ "started": "2026-11-16T21:06:10+00:00",
+ "steps": {
+  "lobbying": "ok",
+  "vendorlobby": "ok",
+  "fec": "ok",
+  "jfc": "ok",
+  "politicians": "ok",
+  "donors": "ok",
+  "membercom": "ok",
+  "fara": "ok",
+  "firms": "ok",
+  "firmbase": "ok",
+  "sec": "ok",
+  "topdonors": "ok",
+  "countrypacs": "ok"
+ },
+ "minutes": {
+  "lobbying": 0.7,
+  "vendorlobby": 0.0,
+  "fec": 4.6,
+  "jfc": 9.4,
+  "politicians": 0.0,
+  "donors": 8.2,
+  "membercom": 1.0,
+  "fara": 0.0,
+  "firms": 15.9,
+  "firmbase": 0.0,
+  "sec": 0.0,
+  "topdonors": 0.9,
+  "countrypacs": 0.0
+ },
+ "errors": {},
+ "earlier_run_started": "2026-11-15T14:26:50+00:00",
+ "finished": "2026-11-16T21:46:58+00:00",
+ "page_rebuilt": false
+}

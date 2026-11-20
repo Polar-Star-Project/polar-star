@@ -1,0 +1,17 @@
+{
+ "built": "2026-11-17",
+ "stale": [
+  "Contract type, guaranteed beds and inspection rating per facility (2026-07-20, 120 days; nothing newer posted, checked 2026-11-16)",
+  "Population, solitary confinement and contract terms per facility (ICE detention statistics workbooks) (2026-07-20, 120 days; nothing newer posted, checked 2026-11-16)",
+  "Removals, returns and expulsions by fiscal year (yearbook table 39) (2023-09-30, 1144 days; nothing newer posted, checked 2026-11-16)",
+  "Alternatives to detention, book-ins, removals, length of stay, bond, segregation reasons, parents of US citizens and TPS countries (ICE detention statistics) (2026-07-20, 120 days; nothing newer posted, checked 2026-11-16)",
+  "Removals from detention by destination country (ICE detention records) (2026-07-31, 109 days; nothing newer posted, checked 2026-11-16)"
+ ],
+ "layers": {
+  "facilities": 561,
+  "agreements_287g": 1205,
+  "airports": 197,
+  "flight_routes": 2041,
+  "flight_tracks_recent": 146
+ }
+}

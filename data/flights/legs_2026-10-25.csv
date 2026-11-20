@@ -1,0 +1,4 @@
+date,registration,hex,aircraft_type,callsign,departed_utc,arrived_utc,origin,origin_country,origin_certain,dest,dest_country,dest_certain,kind,basis
+2026-10-25,N281GX,a2d25e,A320,GXA4639,06:13,07:20,EUG,US,True,OAK,US,True,domestic,"contractor aircraft; day includes AZA (Mesa, AZ)"
+2026-10-25,N281GX,a2d25e,A320,GXA139,08:29,10:03,OAK,US,True,AZA,US,True,domestic,"contractor aircraft; day includes AZA (Mesa, AZ)"
+2026-10-25,N507VL,a655d7,A320,GXA901,16:38,18:20,AEX,US,True,MIA,US,True,domestic,"contractor aircraft; day includes AEX (Alexandria, LA)"

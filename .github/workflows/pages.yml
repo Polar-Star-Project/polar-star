@@ -1,0 +1,59 @@
+# Publishes the page. Runs only in the PUBLIC repository, on each push the publisher app makes to main.
+name: pages
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+concurrency:
+  group: pages
+  cancel-in-progress: false
+jobs:
+  deploy:
+    if: github.repository == 'Polar-Star-Project/polar-star'
+    runs-on: ubuntu-24.04
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1   # v7.0.1
+      - id: pages
+        uses: actions/configure-pages@45bfe0192ca1faeb007ade9deae92b16b8254a0d   # v6.0.0
+      - run: |
+          # The built page is a fragment (it is also published as an artifact that adds its own wrapper), so give it a document head here.
+          mkdir -p _site && cp -r site/layers _site/ 2>/dev/null || true
+          cp site/flights-data.js _site/
+          cp site/more-data.js _site/
+          cp site/persons-data.js _site/
+          cp site/pol-data.js _site/
+          cp site/watch.xml _site/
+          printf 'User-agent: *\nAllow: /\nSitemap: https://polarstarproject.org/sitemap.xml\n' > _site/robots.txt
+          # the plain facility pages and the sitemap that lists them: built by the weekly run in the working repository and
+          # committed there, because this repository only receives commits; a missing folder fails the deploy rather than
+          # publishing a page without them
+          cp -r site/f _site/
+          cp site/sitemap.xml _site/
+          mkdir -p _site/brand && cp site/brand/favicon.svg _site/brand/
+          mkdir -p _site/vendor && cp site/vendor/d3.min.js site/vendor/topojson.min.js _site/vendor/ && cp -r site/vendor/fonts _site/vendor/
+          { printf '<!doctype html>\n<html lang="en">\n<meta name="viewport" content="width=device-width, initial-scale=1">\n'; cat site/index.html; } > _site/index.html
+      - uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9   # v5.0.0
+        with:
+          path: _site
+      - id: deploy
+        uses: actions/deploy-pages@368f82528645a54fb793d4d04e342629a3f51346   # v5.0.1
+      # A frozen copy of the published page and its data files at the Internet Archive, which every citation links to.
+      # After the deploy, so the Archive reads what was just published. Never fails the run.
+      - name: Save a frozen copy
+        if: steps.deploy.outcome == 'success'
+        continue-on-error: true
+        run: |
+          u=https://polarstarproject.org
+          urls="$u/ $u/f/"
+          for f in more-data persons-data pol-data flights-data; do
+            v=$(grep -o "window\.[A-Z_]*={\"v\":\"[0-9a-f]*\"" "site/$f.js" | head -1 | grep -o '[0-9a-f]\{12\}')
+            [ -n "$v" ] && urls="$urls $u/$f.js?v=$v"
+          done
+          for x in $urls; do curl -s -o /dev/null -w "%{http_code} $x\n" -m 120 "https://web.archive.org/save/$x" || true; sleep 10; done

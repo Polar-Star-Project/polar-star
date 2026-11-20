@@ -1,0 +1,4 @@
+key|checked|source|note
+dril|2026-11-14|https://www.ice.gov/enforcementconcerns|Checked by hand by the publisher: number shown on ICE's Enforcement Concerns page, where ICE now names it the Detention, Removals, and Information Line (its old page returns 404). The weekly check cannot reach ice.gov from GitHub.
+ciam|2026-11-14|https://embamex.sre.gob.mx/eua/index.php/en/telefonos-utiles|Checked by hand by the publisher: number shown on the Embassy of Mexico's useful-numbers page (the gob.mx CIAM page returns 404). The weekly check cannot match it from GitHub.
+hn|2026-11-06|https://sreci.gob.hn/|Checked for the publisher: the Honduran foreign ministry page lists Honduras's embassies and consulates. The weekly check cannot reach it from GitHub.
